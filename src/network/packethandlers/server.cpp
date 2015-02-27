@@ -111,7 +111,7 @@ void Server::handleCommand_Init(NetworkPacket* pkt)
 		DenyAccess(pkt->getPeerId(), std::wstring(
 				L"Your client's version is not supported.\n"
 				L"Server version is ")
-				+ narrow_to_wide(minetest_version_simple) + L"."
+				+ narrow_to_wide(g_version_string) + L"."
 		);
 		return;
 	}
@@ -159,7 +159,7 @@ void Server::handleCommand_Init(NetworkPacket* pkt)
 		DenyAccess(pkt->getPeerId(), std::wstring(
 				L"Your client's version is not supported.\n"
 				L"Server version is ")
-				+ narrow_to_wide(minetest_version_simple) + L",\n"
+				+ narrow_to_wide(g_version_string) + L",\n"
 				+ L"server's PROTOCOL_VERSION is "
 				+ narrow_to_wide(itos(SERVER_PROTOCOL_VERSION_MIN))
 				+ L"..."
@@ -179,7 +179,7 @@ void Server::handleCommand_Init(NetworkPacket* pkt)
 			DenyAccess(pkt->getPeerId(), std::wstring(
 					L"Your client's version is not supported.\n"
 					L"Server version is ")
-					+ narrow_to_wide(minetest_version_simple) + L",\n"
+					+ narrow_to_wide(g_version_string) + L",\n"
 					+ L"server's PROTOCOL_VERSION (strict) is "
 					+ narrow_to_wide(itos(LATEST_PROTOCOL_VERSION))
 					+ L", client's PROTOCOL_VERSION is "
