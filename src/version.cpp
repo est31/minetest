@@ -20,18 +20,27 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "version.h"
 #include "config.h"
 
-#if defined(__ANDROID__)
+#ifdef __ANDROID__
 	#include "android_version.h"
 #elif defined(USE_CMAKE_CONFIG_H)
 	#include "cmake_config_githash.h"
 #endif
 
-#ifndef VERSION_GITHASH
+#ifdef CMAKE_VERSION_GITHASH
+	#define VERSION_GITHASH CMAKE_VERSION_GITHASH
+#else
 	#define VERSION_GITHASH VERSION_STRING
 #endif
 
+const char *minetest_version_simple = VERSION_STRING;
+const char *minetest_version_hash = VERSION_GITHASH;
 
-const char *g_version_string = VERSION_STRING;
-const char *g_version_hash = VERSION_GITHASH;
-const char *g_build_info = "VER=" VERSION_GITHASH " " BUILD_INFO;
+#ifdef USE_CMAKE_CONFIG_H
+const char *minetest_build_info =
+		"VER=" VERSION_GITHASH " " CMAKE_BUILD_INFO;
+#elif defined(ANDROID)
+const char *minetest_build_info = "android jni";
+#else
+const char *minetest_build_info = "non-cmake";
+#endif
 

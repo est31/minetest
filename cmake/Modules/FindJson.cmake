@@ -1,20 +1,18 @@
-# Look for JSONCPP, use our own if not found
+# Look for json, use our own if not found
 
-mark_as_advanced(JSON_LIBRARY JSON_INCLUDE_DIR)
+#FIND_PATH(JSON_INCLUDE_DIR json.h)
 
-find_path(JSON_INCLUDE_DIR json/features.h)
-find_library(JSON_LIBRARY NAMES jsoncpp)
+#FIND_LIBRARY(JSON_LIBRARY NAMES jsoncpp)
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(JSONCPP DEFAULT_MSG JSON_LIBRARY JSON_INCLUDE_DIR)
+#IF(JSON_LIBRARY AND JSON_INCLUDE_DIR)
+#	SET( JSON_FOUND TRUE )
+#ENDIF(JSON_LIBRARY AND JSON_INCLUDE_DIR)
 
-if(JSON_INCLUDE_DIR AND JSON_LIBRARY)
-	message(STATUS "Found system JSONCPP header file in ${JSON_INCLUDE_DIR}")
-	message(STATUS "Found system JSONCPP library ${JSON_LIBRARY}")
-else()
-	message(STATUS "Using bundled JSONCPP library.")
-	set(JSON_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/json)
-	set(JSON_LIBRARY jsoncpp)
-	add_subdirectory(json)
-endif()
-
+#IF(JSON_FOUND)
+#	MESSAGE(STATUS "Found system jsoncpp header file in ${JSON_INCLUDE_DIR}")
+#	MESSAGE(STATUS "Found system jsoncpp library ${JSON_LIBRARY}")
+#ELSE(JSON_FOUND)
+	SET(JSON_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/json)
+	SET(JSON_LIBRARY jsoncpp)
+	MESSAGE(STATUS "Using project jsoncpp library")
+#ENDIF(JSON_FOUND)

@@ -1,11 +1,11 @@
-.\" Minetest-server man page
-.TH minetest-server 6 "10 September 2013" "" ""
+.\" Minetestserver man page
+.TH minetestserver 6 "10 September 2013" "" ""
 
 .SH NAME
-minetest-server \- Minetest server
+minetestserver \- Minetest server
 
 .SH SYNOPSIS
-.B minetest-server
+.B minetestserver
 [ OPTION ... ]
 
 .SH DESCRIPTION
@@ -19,8 +19,11 @@ The main design philosophy is to keep it technically simple, stable and portable
 \-\-config <value>
 Load configuration from specified file
 .TP
-\-\-run\-unittests
-Run unit tests and exit
+\-\-disable\-unittests
+Disable unit tests
+.TP
+\-\-enable\-unittests
+Enable unit tests
 .TP
 \-\-gameid <value>
 Set gameid
@@ -53,8 +56,8 @@ Print enormous amounts of information to console
 Set world path
 .TP
 \-\-migrate <value>
-Migrate from current map backend to another. Possible values are sqlite3,
-leveldb, redis, and dummy.
+Migrate from current map backend to another. Possible values are sqlite3
+and leveldb.
 
 .SH BUGS
 Please report all bugs to Perttu Ahola <celeron55@gmail.com>.

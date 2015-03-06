@@ -27,4 +27,3 @@ target_link_libraries(
 	${FREETYPE_LIBRARY}
 	${ZLIB_LIBRARIES}  # needed by freetype, repeated here for safety
 	)
-

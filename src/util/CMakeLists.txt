@@ -8,4 +8,3 @@ set(UTIL_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/string.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/timetaker.cpp
 	PARENT_SCOPE)
-

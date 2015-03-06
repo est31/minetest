@@ -1,4 +1,14 @@
-add_library(jsoncpp jsoncpp.cpp)
+if( UNIX )
+	set(json_SRCS jsoncpp.cpp)
+	set(json_platform_LIBS "")
+else( UNIX )
+	set(json_SRCS jsoncpp.cpp)
+	set(json_platform_LIBS "")
+endif( UNIX )
 
-target_link_libraries(jsoncpp)
+add_library(jsoncpp ${json_SRCS})
 
+target_link_libraries(
+	jsoncpp
+	${json_platform_LIBS}
+)

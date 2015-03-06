@@ -409,12 +409,12 @@ static void print_allowed_options(const OptionList &allowed_options)
 static void print_version()
 {
 #ifdef SERVER
-	dstream << PROJECT_NAME "-server " << g_version_hash << std::endl;
+	dstream << "minetestserver " << minetest_version_hash << std::endl;
 #else
-	dstream << PROJECT_NAME " " << g_version_hash << std::endl;
+	dstream << "Minetest " << minetest_version_hash << std::endl;
 	dstream << "Using Irrlicht " << IRRLICHT_SDK_VERSION << std::endl;
 #endif
-	dstream << "Build info: " << g_build_info << std::endl;
+	dstream << "Build info: " << minetest_build_info << std::endl;
 }
 
 static void list_game_ids()
@@ -551,7 +551,7 @@ static void startup_message()
 	infostream << PROJECT_NAME << " " << _("with")
 	           << " SER_FMT_VER_HIGHEST_READ="
                << (int)SER_FMT_VER_HIGHEST_READ << ", "
-               << g_build_info << std::endl;
+               << minetest_build_info << std::endl;
 }
 
 static bool read_config_file(const Settings &cmd_args)
