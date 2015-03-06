@@ -3,7 +3,7 @@
 if [ $WINDOWS = "no" ]; then
 	mkdir -p travisbuild
 	cd travisbuild
-	cmake -DENABLE_GETTEXT=1 -DENABLE_LEVELDB=1 -DENABLE_REDIS=1 -DCMAKE_BUILD_TYPE=Debug ..
+	cmake -DENABLE_GETTEXT=1 -DENABLE_LEVELDB=1 -DENABLE_FREETYPE=0 -DENABLE_REDIS=1 -DCMAKE_BUILD_TYPE=Debug ..
 	make -j2
 	echo "Running unit tests."
 	../bin/minetest --run-unittests
