@@ -9,7 +9,17 @@ if [ $CC = "clang" ]; then
 	sudo apt-get install clang
 fi
 sudo apt-get install p7zip-full
-if [ $WINDOWS = "no" ]; then
+if [ $ANDROID = "yes" ]; then
+	wget https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz -O android-sdk.tgz
+	wget https://dl.google.com/android/ndk/android-ndk-r8b-linux-x86.tar.bz2 -O android-ndk.tar.bz2
+	tar xf android-sdk.tgz
+	tar xf android-ndk.tar.bz2
+	mv android-sdk-linux /usr/local/android-sdk
+	mv android-ndk-r8b /usr/local/android-ndk
+	( sleep 5 && while [ 1 ]; do sleep 1; echo y; done ) |\
+		/usr/local/android-sdk/tools/android update sdk --no-ui --filter \
+		platform-tool,android-10,build-tools-21.1.2
+elif [ $WINDOWS = "no" ]; then
 	sudo apt-get install libirrlicht-dev cmake libbz2-dev libpng12-dev \
 	libjpeg8-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libhiredis-dev \
 	libogg-dev libvorbis-dev libopenal-dev gettext
