@@ -289,6 +289,7 @@ add_subdirectory(unittest)
 add_subdirectory(util)
 
 set(common_SRCS
+	areastore.cpp
 	ban.cpp
 	cavegen.cpp
 	clientiface.cpp
