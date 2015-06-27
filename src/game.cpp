@@ -2175,7 +2175,8 @@ bool Game::connectToServer(const std::string &playername,
 			local_server_mode = true;
 		}
 	} catch (ResolveError &e) {
-		*error_message = std::string("Couldn't resolve address: ") + e.what();
+		*error_message = std::string("Couldn't resolve address '")
+			+ address->c_str() + std::string("': ") + e.what();
 		errorstream << *error_message << std::endl;
 		return false;
 	}
