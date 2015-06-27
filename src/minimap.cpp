@@ -118,6 +118,8 @@ void *MinimapUpdateThread::Thread()
 
 	porting::setThreadName("MinimapUpdateThread");
 
+	u32 r_ms = 0;
+	u32 r_cnt = 0;
 	while (!StopRequested()) {
 
 		while (m_queue.size()) {
@@ -134,12 +136,15 @@ void *MinimapUpdateThread::Thread()
 
 		if (data->map_invalidated) {
 			if (data->mode != MINIMAP_MODE_OFF) {
+				r_cnt++;
+				u32 start_ms = porting::getTimeMs();
 				getMap(data->pos, data->map_size, data->scan_height, data->radar);
-				last_update_pos = data->pos;
+				u32 end_ms = porting::getTimeMs();
+				r_ms +=end_ms-start_ms;
+				errorstream<<"Time taken (ms): "<<end_ms-start_ms << " average (ms) " << r_ms/r_cnt<<std::endl;
 				data->map_invalidated = false;
 			}
 		}
-	//	sleep_ms(10);
 	}
 	END_DEBUG_EXCEPTION_HANDLER(errorstream)
 
@@ -439,8 +444,8 @@ void Mapper::drawMinimap()
 
 		v3s16 d_pos = m_minimap_update_thread->last_update_pos - data->pos;
 		core::matrix4 txt_matrix;
-		//matrix.setTextureTranslate(.5 + d_pos.X / 512, .5 + d_pos.Z / 512);
-		txt_matrix.setTextureScale(3.0,1.0);
+		matrix.setTextureTranslate(.2, .2);
+		//txt_matrix.setTextureScale(3.0,1.0);
 		//txt_matrix.setTextureTranslateTransposed(d_pos.X, d_pos.Z);
 		material.setTextureMatrix(0, txt_matrix);
 		material.setTextureMatrix(1, txt_matrix);
