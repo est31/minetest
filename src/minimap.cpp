@@ -135,6 +135,7 @@ void *MinimapUpdateThread::Thread()
 		if (data->map_invalidated) {
 			if (data->mode != MINIMAP_MODE_OFF) {
 				getMap(data->pos, data->map_size, data->scan_height, data->radar);
+				last_update_pos = data->pos;
 				data->map_invalidated = false;
 			}
 		}
@@ -432,7 +433,16 @@ void Mapper::drawMinimap()
 		video::SMaterial& material = m_meshbuffer->getMaterial();
 		material.setFlag(video::EMF_TRILINEAR_FILTER, true);
 		material.Lighting = false;
+		v3s16 d_pos = m_minimap_update_thread->last_update_pos - data->pos;
+
+		actionstream << "D " << d_pos.X << " " << d_pos.Y << " " << d_pos.Z << std::endl;
 		material.TextureLayer[0].Texture = minimap_texture;
+		core::matrix4 txt_matrix;
+		txt_matrix.setTextureTranslate(d_pos.X, d_pos.Z);
+		txt_matrix.setTextureTranslateTransposed(d_pos.X, d_pos.Z);
+		material.setTextureMatrix(0, txt_matrix);
+		material.setTextureMatrix(1, txt_matrix);
+
 		material.TextureLayer[1].Texture = data->heightmap_texture;
 		if (m_enable_shaders && !data->radar) {
 			u16 sid = shdrsrc->getShader("minimap_shader", 1, 1);

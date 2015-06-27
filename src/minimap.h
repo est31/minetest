@@ -132,6 +132,7 @@ public:
 	MinimapData *data;
 	MinimapUpdateQueue m_queue;
 	std::map<v3s16, MinimapMapblock *> m_blocks_cache;
+	v3s16 last_update_pos;
 };
 
 class Mapper
