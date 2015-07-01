@@ -181,7 +181,7 @@ void mapblock_mesh_generate_special(MeshMakeData *data,
 	/*
 		Some settings
 	*/
-	bool enable_mesh_cache	= g_settings->getBool("enable_mesh_cache");
+	bool enable_mesh_cache = g_settings->getBool("enable_mesh_cache");
 	bool new_style_water = g_settings->getBool("new_style_water");
 
 	float node_liquid_level = 1.0;

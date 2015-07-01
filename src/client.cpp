@@ -169,11 +169,16 @@ void MeshUpdateThread::enqueueUpdate(v3s16 p, MeshMakeData *data,
 	deferUpdate();
 }
 
+u32 mu = 0;
+u32 mc = 0;
+
 void MeshUpdateThread::doUpdate()
 {
 	QueuedMeshUpdate *q;
 	while ((q = m_queue_in.pop())) {
 
+		mu -= porting::getTimeUs();
+		mc++;
 		ScopeProfiler sp(g_profiler, "Client: Mesh making");
 
 		MapBlockMesh *mesh_new = new MapBlockMesh(q->data, m_camera_offset);
@@ -185,8 +190,10 @@ void MeshUpdateThread::doUpdate()
 
 		m_queue_out.push_back(r);
 
+		mu += porting::getTimeUs();
 		delete q;
 	}
+	errorstream << "MU " << (float) mu  / mc << "(" << mc << ")" << std::endl;
 }
 
 /*
