@@ -21,11 +21,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <map>
 #include <list>
 #include <vector>
+#include <istream>
 
 typedef struct Area {
 	Area()
 	{
-		data = 0;
+		data = NULL;
 		datalen = 0;
 	}
 	~Area()
@@ -33,45 +34,58 @@ typedef struct Area {
 		delete[] data;
 	}
 
-	u64 id;
+	u32 id;
 	v3s16 minedge;
 	v3s16 maxedge;
-	void *data;
-	size_t datalen;
+	char *data;
+	u16 datalen;
 } Area;
 
 class AreaStore {
+protected:
+	u16 count;
 public:
 	virtual void insertArea(Area *a) = 0;
-	virtual void removeArea(u64 id) = 0;
+	virtual void removeArea(u32 id) = 0;
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos) = 0;
 	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap) = 0;
-	virtual u64 getFreeId(Area *a);
+
+	// calls a passed function for every stored area, until the
+	// callback returns true. If that happens, it returns true,
+	// if the search is exhausted, it returns false
+	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const = 0;
+
+	u32 getFreeId(Area *a);
+	u16 size() const;
+	bool deserialize(std::istream &is);
+	void serialize(std::ostream &is) const;
 };
 
 
 class VectorAreaStore : AreaStore {
 public:
 	virtual void insertArea(Area *a);
-	virtual void removeArea(u64 id);
+	virtual void removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
 	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap);
+	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
 	~VectorAreaStore();
 private:
 	std::vector<Area *> m_areas;
 };
 
-typedef struct AreaStruct;
+typedef struct AreaStruct AreaStruct;
 
 class OctreeAreaStore : AreaStore {
 public:
 	virtual void insertArea(Area *a);
-	virtual void removeArea(u64 id);
+	virtual void removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
 	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap);
 	~OctreeAreaStore();
 private:
-	AreaStruct m_root_struct;
+	AreaStruct *m_root_struct;
+	std::map<u32, Area*> areas_stored;
 };
 
 /*//TODO make static

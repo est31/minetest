@@ -18,6 +18,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 */ 
  
 #include "areastore.h"
+#include "util/serialize.h"
 
 #define AST_SMALLER_EQ_AS(p, q) ((p.X <= q.X) && (p.Y < q.Y) && (p.Z < q.Z))
 
@@ -25,27 +26,77 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	((a->minedge.d >= b->minedge.d) && (a->minedge.d <= b->maxedge.d))     \
 	|| ((a->maxedge.d >= b->minedge.d) && (a->maxedge.d <= b->maxedge.d)))
 
-#define AST_CONTAINS_PT(a, p) (AST_SMALLER_EQ_AS(a->minedge, q) && \
+#define AST_CONTAINS_PT(a, p) (AST_SMALLER_EQ_AS(a->minedge, p) && \
 	AST_SMALLER_EQ_AS(p, a->maxedge))
 
 #define AST_CONTAINS_AREA(a, b) (AST_SMALLER_EQ_AS(a->minedge, b->minedge) \
-	&& VAST_SMALLER_EQ_AS(b->maxedge, a->maxedge))
+	&& AST_SMALLER_EQ_AS(b->maxedge, a->maxedge))
 
 #define AST_AREAS_OVERLAP(a, b) (AST_OVERLAPS_IN_DIMENSION(a, b, X) && \
 	AST_OVERLAPS_IN_DIMENSION(a, b, Y) && AST_OVERLAPS_IN_DIMENSION(a, b, Z))
 
+
+u16 AreaStore::size() const
+{
+	return count;
+}
+
+bool AreaStore::deserialize(std::istream &is)
+{
+	u8 ver = readU8(is);
+	if (ver != 1)
+		return false;
+	u16 count_areas = readU16(is);
+	for (u16 i = 0; i < count_areas; i++) {
+		// deserialize an area
+		Area *a = new Area();
+		a->id = readU32(is);
+		a->minedge = readV3S16(is);
+		a->maxedge = readV3S16(is);
+		a->datalen = readU16(is);
+		a->data = new char[a->datalen];
+		is.read((char *) a->data, a->datalen);
+		insertArea(a);
+	}
+	return true;
+}
+
+
+static bool serialize_area(void *ostr, Area *a)
+{
+	std::ostream &os = *((std::ostream *) ostr);
+	writeU32(os, a->id);
+	writeV3S16(os, a->minedge);
+	writeV3S16(os, a->maxedge);
+	writeU16(os, a->datalen);
+	os.write(a->data, a->datalen);
+
+	return false;
+}
+
+
+void AreaStore::serialize(std::ostream &os) const
+{
+	// write initial data
+	writeU8(os, 1); // serialisation version
+	writeU16(os, count);
+	forEach(&serialize_area, &os);
+}
+
 void VectorAreaStore::insertArea(Area *a)
 {
+	count++;
 	m_areas.push_back(a);
 }
 
-void VectorAreaStore::removeArea(u64 id)
+void VectorAreaStore::removeArea(u32 id)
 {
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (b->id == id) {
 			m_areas.erase(m_areas.begin() + i);
+			count--;
 			break;
 		}
 	}
@@ -53,8 +104,8 @@ void VectorAreaStore::removeArea(u64 id)
 
 void VectorAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 {
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
 			result.push_back(b);
@@ -64,8 +115,8 @@ void VectorAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 
 void VectorAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap)
 {
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(b, b) || (accept_overlap && AST_AREAS_OVERLAP(a, b))) {
 			result.push_back(b);
@@ -73,11 +124,22 @@ void VectorAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool 
 	}
 }
 
-void VectorAreaStore::~VectorAreaStore()
+bool VectorAreaStore::forEach(bool (*callback)(void *args, Area *a), void *args) const
 {
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
-		delete *m_areas[i];
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+		if (callback(args, m_areas[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+
+VectorAreaStore::~VectorAreaStore()
+{
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+		delete m_areas[i];
 	}
 }
 
@@ -150,7 +212,7 @@ typedef struct AreaStruct {
 
 			// take the area in the lower "layer" with the lowest score difference
 			char sst = -1;
-			char sst_score
+			char sst_score;
 			for (char i = 0; i < 8; i++) {
 			}
 		}
@@ -162,18 +224,18 @@ typedef struct AreaStruct {
 	std::map<u64, Area*> areas_stored;
 } AreaStruct;
 
-void OctreeAreaStore::insertArea(Area *a)
+/*void OctreeAreaStore::insertArea(Area *a)
 {
 	m_root_struct.insert(a);
 }
 
-void OctreeAreaStore::removeArea(u64 id)
+void OctreeAreaStore::removeArea(u32 id)
 {
 	//TODO implement
 	// 1. traverse tree to find area (using unique id marking)
 	// 2. call remove() on the containing area
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (b->id == id) {
 			m_areas.erase(m_areas.begin() + i);
@@ -186,8 +248,8 @@ void OctreeAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 {
 	//TODO implement
 	// traverse tree down as far as possible, and check areas on the way
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
 			result.push_back(b);
@@ -199,8 +261,8 @@ void OctreeAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool 
 {
 	//TODO implement
 	// traverse tree down, and check areas on the way
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(b, b) || (accept_overlap && AST_AREAS_OVERLAP(a, b))) {
 			result.push_back(b);
@@ -208,14 +270,20 @@ void OctreeAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool 
 	}
 }
 
-void OctreeAreaStore::~OctreeAreaStore()
+OctreeAreaStore::OctreeAreaStore()
 {
+	m_root_struct = new AreaStruct(0);
+}
+
+OctreeAreaStore::~OctreeAreaStore()
+{
+	delete m_root_struct;
 	//TODO implement
-	std::vector<Area *>::size_t msiz = m_areas.size();
-	for (std::vector<Area *>::size_t i = 0; i < msiz; i++) {
+	std::vector<Area *>::size_type msiz = m_areas.size();
+	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		delete *m_areas[i];
 	}
-}
+}*/
 
 /*void AreaStore::insertArea(Area * a)
 {

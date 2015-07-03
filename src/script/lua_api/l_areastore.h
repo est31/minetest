@@ -69,13 +69,14 @@ public:
 	AreaStore *as;
 
 	LuaAreaStore();
+	LuaAreaStore(const std::string &filename);
 	~LuaAreaStore();
 
-	// LuaVoxelManip()
-	// Creates a LuaVoxelManip and leaves it on top of stack
+	// AreaStore()
+	// Creates a AreaStore and leaves it on top of stack
 	static int create_object(lua_State *L);
 
-	static LuaVoxelManip *checkobject(lua_State *L, int narg);
+	static AreaStore *checkobject(lua_State *L, int narg);
 
 	static void Register(lua_State *L);
 };

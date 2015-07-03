@@ -357,19 +357,20 @@ int LuaAreaStore::l_get_emerged_area(lua_State *L)
 	return 2;
 }
 
-LuaAreaStore::LuaAreaStore(MMVManip *mmvm, bool is_mg_vm)
+LuaAreaStore::LuaAreaStore()
 {
-	this->vm           = mmvm;
-	this->is_mapgen_vm = is_mg_vm;
+	this->as = new VectorAreaStore();
 }
 
-LuaAreaStore::LuaAreaStore(Map *map)
+LuaAreaStore::LuaAreaStore(const std::string &filename)
 {
-	this->vm = new MMVManip(map);
-	this->is_mapgen_vm = false;
+	this->as = new VectorAreaStore();
+	// TODO check filename for violation
+	
+	this->as->deserialize(st);
 }
 
-LuaAreaStore::LuaAreaStore(Map *map, v3s16 p1, v3s16 p2)
+LuaAreaStore::LuaAreaStore(const std::string &filename)
 {
 	this->vm = new MMVManip(map);
 	this->is_mapgen_vm = false;
@@ -391,10 +392,6 @@ LuaAreaStore::~LuaAreaStore()
 int LuaAreaStore::create_object(lua_State *L)
 {
 	NO_MAP_LOCK_REQUIRED;
-
-	Environment *env = getEnv(L);
-	if (!env)
-		return 0;
 
 	Map *map = &(env->getMap());
 	LuaAreaStore *o = (lua_istable(L, 1) && lua_istable(L, 2)) ?
