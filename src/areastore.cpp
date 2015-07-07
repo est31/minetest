@@ -22,23 +22,36 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #define AST_SMALLER_EQ_AS(p, q) ((p.X <= q.X) && (p.Y < q.Y) && (p.Z < q.Z))
 
-#define AST_OVERLAPS_IN_DIMENSION(a, b, d) (                               \
-	((a->minedge.d >= b->minedge.d) && (a->minedge.d <= b->maxedge.d))     \
-	|| ((a->maxedge.d >= b->minedge.d) && (a->maxedge.d <= b->maxedge.d)))
+#define AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, d) (              \
+	((amine.d >= b->minedge.d) && (amine.d <= b->maxedge.d))     \
+	|| ((amaxe.d >= b->minedge.d) && (amaxe.d <= b->maxedge.d)))
 
 #define AST_CONTAINS_PT(a, p) (AST_SMALLER_EQ_AS(a->minedge, p) && \
 	AST_SMALLER_EQ_AS(p, a->maxedge))
 
-#define AST_CONTAINS_AREA(a, b) (AST_SMALLER_EQ_AS(a->minedge, b->minedge) \
-	&& AST_SMALLER_EQ_AS(b->maxedge, a->maxedge))
+#define AST_CONTAINS_AREA(amine, amaxe, b)         \
+	(AST_SMALLER_EQ_AS(amine, b->minedge) \
+	&& AST_SMALLER_EQ_AS(b->maxedge, amaxe))
 
-#define AST_AREAS_OVERLAP(a, b) (AST_OVERLAPS_IN_DIMENSION(a, b, X) && \
-	AST_OVERLAPS_IN_DIMENSION(a, b, Y) && AST_OVERLAPS_IN_DIMENSION(a, b, Z))
+#define AST_AREAS_OVERLAP(amine, amaxe, b)                \
+	(AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, X) && \
+	AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, Y) &&  \
+	AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, Z))
 
 
 u16 AreaStore::size() const
 {
 	return count;
+}
+
+Area *AreaStore::getArea(u32 id) const
+{
+	Area *res = NULL;
+	std::map<u32, Area *>::const_iterator itr = areas_map.find(id);
+	if (itr != areas_map.end()) {
+		res = itr->second;
+	}
+	return res;
 }
 
 bool AreaStore::deserialize(std::istream &is)
@@ -85,12 +98,14 @@ void AreaStore::serialize(std::ostream &os) const
 
 void VectorAreaStore::insertArea(Area *a)
 {
+	areas_map[a->id] = a;
 	count++;
 	m_areas.push_back(a);
 }
 
 void VectorAreaStore::removeArea(u32 id)
 {
+	areas_map.erase(id);
 	std::vector<Area *>::size_type msiz = m_areas.size();
 	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
@@ -113,12 +128,14 @@ void VectorAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 	}
 }
 
-void VectorAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap)
+void VectorAreaStore::getAreasInArea(std::vector<Area *> &result,
+		v3s16 minedge, v3s16 maxedge, bool accept_overlap)
 {
 	std::vector<Area *>::size_type msiz = m_areas.size();
 	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
-		if (AST_CONTAINS_AREA(b, b) || (accept_overlap && AST_AREAS_OVERLAP(a, b))) {
+		if (AST_CONTAINS_AREA(minedge, maxedge, b) || (accept_overlap &&
+				AST_AREAS_OVERLAP(minedge, maxedge, b))) {
 			result.push_back(b);
 		}
 	}
@@ -257,7 +274,7 @@ void OctreeAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 	}
 }
 
-void OctreeAreaStore::getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap)
+void OctreeAreaStore::getAreasInArea(std::vector<Area *> &result, Area *a, bool accept_overlap)
 {
 	//TODO implement
 	// traverse tree down, and check areas on the way

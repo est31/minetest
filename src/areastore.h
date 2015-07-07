@@ -17,6 +17,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */ 
 
+#ifndef AREASTORE_H_
+#define AREASTORE_H_
+
 #include "irr_v3d.h"
 #include <map>
 #include <list>
@@ -43,12 +46,15 @@ typedef struct Area {
 
 class AreaStore {
 protected:
+	// TODO change to unordered_map when we can
+	std::map<u32, Area *> areas_map;
 	u16 count;
 public:
 	virtual void insertArea(Area *a) = 0;
 	virtual void removeArea(u32 id) = 0;
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos) = 0;
-	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap) = 0;
+	virtual void getAreasInArea(std::vector<Area *> &result,
+		v3s16 minedge, v3s16 maxedge, bool accept_overlap) = 0;
 
 	// calls a passed function for every stored area, until the
 	// callback returns true. If that happens, it returns true,
@@ -56,6 +62,7 @@ public:
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const = 0;
 
 	u32 getFreeId(Area *a);
+	Area *getArea(u32 id) const;
 	u16 size() const;
 	bool deserialize(std::istream &is);
 	void serialize(std::ostream &is) const;
@@ -67,7 +74,8 @@ public:
 	virtual void insertArea(Area *a);
 	virtual void removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
-	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap);
+	virtual void getAreasInArea(std::vector<Area *> &result,
+		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
 	~VectorAreaStore();
 private:
@@ -81,7 +89,8 @@ public:
 	virtual void insertArea(Area *a);
 	virtual void removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
-	virtual void getAreasinArea(std::vector<Area *> &result, Area *a, bool accept_overlap);
+	virtual void getAreasInArea(std::vector<Area *> &result,
+		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	~OctreeAreaStore();
 private:
 	AreaStruct *m_root_struct;
@@ -114,3 +123,5 @@ public:
 private:
 	AreaStruct m_as;
 };*/
+
+#endif /* AREASTORE_H_ */

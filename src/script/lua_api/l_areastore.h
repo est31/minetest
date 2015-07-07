@@ -17,8 +17,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 */
 
-#ifndef L_VMANIP_H_
-#define L_VMANIP_H_
+#ifndef L_AREASTORE_H_
+#define L_AREASTORE_H_
 
 #include "lua_api/l_base.h"
 #include "irr_v3d.h"
@@ -29,7 +29,7 @@ class MapBlock;
 class MMVManip;
 
 /*
-  VoxelManip
+  AreaStore
  */
 class LuaAreaStore : public ModApiBase {
 private:
@@ -39,13 +39,18 @@ private:
 
 	static int gc_object(lua_State *L);
 
+	static int l_get_area(lua_State *L);
+
 	static int l_get_areas_for_pos(lua_State *L);
 	static int l_get_areas_in_area(lua_State *L);
-	static int l_insert_area(lua_State *L);
-	static int l_remove_area(lua_State *L);
+	static int l_insert_area(lua_State *L); // TODO
+	static int l_remove_area(lua_State *L); // TODO
 
-	static int l_to_string(lua_State *L);
-	static int l_to_file(lua_State *L);
+	static int l_to_string(lua_State *L); // TODO
+	static int l_to_file(lua_State *L); // TODO
+
+	static int l_from_string(lua_State *L); // TODO
+	static int l_from_file(lua_State *L); // TODO
 	/*static int l_write_to_map(lua_State *L);
 
 	static int l_get_node_at(lua_State *L);
@@ -69,7 +74,7 @@ public:
 	AreaStore *as;
 
 	LuaAreaStore();
-	LuaAreaStore(const std::string &filename);
+	LuaAreaStore(const std::string &type);
 	~LuaAreaStore();
 
 	// AreaStore()
@@ -81,4 +86,4 @@ public:
 	static void Register(lua_State *L);
 };
 
-#endif /* L_VMANIP_H_ */
+#endif /* L_AREASTORE_H_ */

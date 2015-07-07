@@ -20,35 +20,180 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "lua_api/l_areastore.h"
 #include "lua_api/l_internal.h"
+#include "common/c_converter.h"
 #include "areastore.h"
+
+static inline void get_data_and_border_flags(u8 start_i, bool *borders, bool *data)
+{
+	if (!lua_isboolean(L, start_i))
+		return;
+	*borders = lua_toboolean(L, start_i);
+	lua_pop(L, 1);
+	if (!lua_isboolean(L, start_i + 1))
+		return;
+	*data = lua_toboolean(L, start_i + 1);
+	lua_pop(L, 1);
+}
+
+static inline void push_area(const Area *a, bool data)
+{
+	lua_newtable(L);
+	lua_pushstring(L, "min");
+	push_v3s16(L, a->minedge);
+	lua_settable(L,-3);
+	lua_pushstring(L, "max");
+	push_v3s16(L, a->maxedge);
+	lua_settable(L,-3);
+	if (data) {
+		lua_pushstring(L, "data");
+		lua_pushlstring(L, a->data, a->datalen);
+		lua_settable(L,-3);
+	}
+}
+
+static inline void push_areas(const std::vector<Area *> &areas, bool borders, bool data)
+{
+	lua_newtable(L);
+	size_t cnt = areas.size();
+	for (size_t i = 0; i < cnt; i++) {
+		if (borders) {
+			lua_pushnumber(L, areas[i]->id);
+			push_area(areas[i], data);
+			lua_settable(L,-3);
+		} else {
+			lua_pushnumber(L, areas[i]->id);
+			lua_pushboolean(L, true);
+			lua_settable(L,-3);
+		}
+	}
+}
 
 // garbage collector
 int LuaAreaStore::gc_object(lua_State *L)
 {
 	LuaAreaStore *o = *(LuaAreaStore **)(lua_touserdata(L, 1));
 	delete o;
-
 	return 0;
 }
 
-int LuaAreaStore::l_read_from_map(lua_State *L)
+// get_area(id, borders, data)
+int LuaAreaStore::l_get_area(lua_State *L)
 {
 	LuaAreaStore *o = checkobject(L, 1);
-	MMVManip *vm = o->vm;
+	AreaStore *ast = o->as;
 
-	v3s16 bp1 = getNodeBlockPos(check_v3s16(L, 2));
-	v3s16 bp2 = getNodeBlockPos(check_v3s16(L, 3));
-	sortBoxVerticies(bp1, bp2);
+	u32 id = lua_tonumber(L, 2);
 
-	vm->initialEmerge(bp1, bp2);
+	bool borders = true;
+	bool data = false;
+	get_data_and_border_flags(3, borders, data);
 
-	push_v3s16(L, vm->m_area.MinEdge);
-	push_v3s16(L, vm->m_area.MaxEdge);
+	Area *res;
+	
+	ast->getArea(&res, id);
+	push_area(res, borders, data);
 
-	return 2;
+	return 1;
 }
 
-int LuaAreaStore::l_get_data(lua_State *L)
+// get_areas_for_pos(pos, borders, data)
+int LuaAreaStore::l_get_areas_for_pos(lua_State *L)
+{
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	v3s16 pos = check_v3s16(L, 2);
+
+	bool borders = true;
+	bool data = false;
+	get_data_and_border_flags(3, borders, data);
+
+	std::vector<Area *> res;
+	
+	ast->getAreasForPos(&res, pos);
+	push_areas(res, borders, data);
+
+	return 1;
+}
+
+// get_areas_for_area(area, borders, data)
+int LuaAreaStore::l_get_areas_for_area(lua_State *L)
+{
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	lua_getfield(L, 2, "min");
+	v3s16 minedge = check_v3s16(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "max");
+	v3s16 maxedge = check_v3s16(L, -1);
+	lua_pop(L, 1);
+
+	bool borders = true;
+	bool data = false;
+	bool accept_overlap = false;
+	if (lua_isboolean(L, 3)) {
+		accept_overlap = lua_toboolean(L, 3);
+		get_data_and_border_flags(4, borders, data);
+	}
+	std::vector<Area *> res;
+	
+	ast->getAreasInArea(&res, minedge, maxedge, accept_overlap);
+	push_areas(res, borders, data);
+
+	return 1;
+}
+
+// insert_area(area)
+int LuaAreaStore::l_insert_area(lua_State *L)
+{
+	// TODO:
+	// 1. find free id
+	// 2. insert area
+	// 3. return true (for success)
+	return 1;
+}
+
+// remove_area(id)
+int LuaAreaStore::l_remove_area(lua_State *L)
+{
+	// TODO:
+	// 1. remove area with id
+	// 3. return success boolean value
+	return 1;
+}
+
+// to_string()
+int LuaAreaStore::l_to_string(lua_State *L)
+{
+	// TODO: serialize to string
+	return 1;
+}
+
+// to_file(filename)
+int LuaAreaStore::l_to_string(lua_State *L)
+{
+	// TODO: serialize to file
+	return 1;
+}
+
+// from_string(str)
+int LuaAreaStore::l_from_string(lua_State *L)
+{
+	// TODO: deserialize from string
+	return 1;
+}
+
+// from_file(filename)
+int LuaAreaStore::l_from_file(lua_State *L)
+{
+	// TODO: deserialize from file
+	return 1;
+}
+
+/*int LuaAreaStore::l_get_data(lua_State *L)
 {
 	NO_MAP_LOCK_REQUIRED;
 
@@ -355,19 +500,22 @@ int LuaAreaStore::l_get_emerged_area(lua_State *L)
 	push_v3s16(L, o->vm->m_area.MaxEdge);
 
 	return 2;
-}
+}*/
 
 LuaAreaStore::LuaAreaStore()
 {
 	this->as = new VectorAreaStore();
 }
 
-LuaAreaStore::LuaAreaStore(const std::string &filename)
+LuaAreaStore::LuaAreaStore(const std::string &type)
 {
-	this->as = new VectorAreaStore();
-	// TODO check filename for violation
-	
-	this->as->deserialize(st);
+	if (type == "Octree") {
+		//this->as = new OctreeAreaStore();
+	} else if (type == "LibSpatial-R*") {
+		//this->as = new LibSpatialAreaStore();
+	} else {
+		this->as = new VectorAreaStore();
+	}
 }
 
 LuaAreaStore::LuaAreaStore(const std::string &filename)
@@ -383,8 +531,7 @@ LuaAreaStore::LuaAreaStore(const std::string &filename)
 
 LuaAreaStore::~LuaAreaStore()
 {
-	if (!is_mapgen_vm)
-		delete vm;
+	delete as;
 }
 
 // LuaAreaStore()
@@ -393,10 +540,9 @@ int LuaAreaStore::create_object(lua_State *L)
 {
 	NO_MAP_LOCK_REQUIRED;
 
-	Map *map = &(env->getMap());
-	LuaAreaStore *o = (lua_istable(L, 1) && lua_istable(L, 2)) ?
-		new LuaAreaStore(map, check_v3s16(L, 1), check_v3s16(L, 2)) :
-		new LuaAreaStore(map);
+	LuaAreaStore *o = (lua_isstring(L, 1)) ?
+		new LuaAreaStore(lua_tostring(L, 1)) :
+		new LuaAreaStore();
 
 	*(void **)(lua_newuserdata(L, sizeof(void *))) = o;
 	luaL_getmetatable(L, className);
@@ -445,23 +591,16 @@ void LuaAreaStore::Register(lua_State *L)
 	lua_register(L, className, create_object);
 }
 
-const char LuaAreaStore::className[] = "VoxelManip";
+const char LuaAreaStore::className[] = "AreaStore";
 const luaL_reg LuaAreaStore::methods[] = {
-	luamethod(LuaAreaStore, read_from_map),
-	luamethod(LuaAreaStore, get_data),
-	luamethod(LuaAreaStore, set_data),
-	luamethod(LuaAreaStore, get_node_at),
-	luamethod(LuaAreaStore, set_node_at),
-	luamethod(LuaAreaStore, write_to_map),
-	luamethod(LuaAreaStore, update_map),
-	luamethod(LuaAreaStore, update_liquids),
-	luamethod(LuaAreaStore, calc_lighting),
-	luamethod(LuaAreaStore, set_lighting),
-	luamethod(LuaAreaStore, get_light_data),
-	luamethod(LuaAreaStore, set_light_data),
-	luamethod(LuaAreaStore, get_param2_data),
-	luamethod(LuaAreaStore, set_param2_data),
-	luamethod(LuaAreaStore, was_modified),
-	luamethod(LuaAreaStore, get_emerged_area),
+	luamethod(LuaAreaStore, get_area),
+	luamethod(LuaAreaStore, get_areas_for_pos),
+	luamethod(LuaAreaStore, get_areas_in_area),
+	luamethod(LuaAreaStore, insert_area),
+	luamethod(LuaAreaStore, remove_area),
+	luamethod(LuaAreaStore, to_string),
+	luamethod(LuaAreaStore, to_file),
+	luamethod(LuaAreaStore, from_string),
+	luamethod(LuaAreaStore, from_file),
 	{0,0}
 };
