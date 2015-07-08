@@ -284,6 +284,7 @@ LOCAL_SRC_FILES +=                                \
 		jni/src/script/cpp_api/s_player.cpp       \
 		jni/src/script/cpp_api/s_security.cpp     \
 		jni/src/script/cpp_api/s_server.cpp       \
+		jni/src/script/lua_api/l_areastore.cpp    \
 		jni/src/script/lua_api/l_base.cpp         \
 		jni/src/script/lua_api/l_craft.cpp        \
 		jni/src/script/lua_api/l_env.cpp          \

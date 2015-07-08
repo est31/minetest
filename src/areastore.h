@@ -52,14 +52,17 @@ protected:
 public:
 	virtual void insertArea(Area *a) = 0;
 	virtual void removeArea(u32 id) = 0;
-	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos) = 0;
-	virtual void getAreasInArea(std::vector<Area *> &result,
+	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos) = 0;
+	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap) = 0;
 
 	// calls a passed function for every stored area, until the
 	// callback returns true. If that happens, it returns true,
 	// if the search is exhausted, it returns false
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const = 0;
+
+	virtual ~AreaStore()
+	{}
 
 	u32 getFreeId(Area *a);
 	Area *getArea(u32 id) const;
@@ -69,12 +72,12 @@ public:
 };
 
 
-class VectorAreaStore : AreaStore {
+class VectorAreaStore : public AreaStore {
 public:
 	virtual void insertArea(Area *a);
 	virtual void removeArea(u32 id);
-	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
-	virtual void getAreasInArea(std::vector<Area *> &result,
+	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
+	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
 	~VectorAreaStore();
@@ -84,7 +87,7 @@ private:
 
 typedef struct AreaStruct AreaStruct;
 
-class OctreeAreaStore : AreaStore {
+class OctreeAreaStore : public AreaStore {
 public:
 	virtual void insertArea(Area *a);
 	virtual void removeArea(u32 id);

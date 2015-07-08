@@ -23,6 +23,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "lua_api/l_base.h"
 #include "irr_v3d.h"
 #include <map>
+#include "areastore.h"
 
 class Map;
 class MapBlock;
@@ -81,7 +82,7 @@ public:
 	// Creates a AreaStore and leaves it on top of stack
 	static int create_object(lua_State *L);
 
-	static AreaStore *checkobject(lua_State *L, int narg);
+	static LuaAreaStore *checkobject(lua_State *L, int narg);
 
 	static void Register(lua_State *L);
 };

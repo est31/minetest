@@ -117,18 +117,18 @@ void VectorAreaStore::removeArea(u32 id)
 	}
 }
 
-void VectorAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
+void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
 {
 	std::vector<Area *>::size_type msiz = m_areas.size();
 	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
-			result.push_back(b);
+			result->push_back(b);
 		}
 	}
 }
 
-void VectorAreaStore::getAreasInArea(std::vector<Area *> &result,
+void VectorAreaStore::getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap)
 {
 	std::vector<Area *>::size_type msiz = m_areas.size();
@@ -136,7 +136,7 @@ void VectorAreaStore::getAreasInArea(std::vector<Area *> &result,
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(minedge, maxedge, b) || (accept_overlap &&
 				AST_AREAS_OVERLAP(minedge, maxedge, b))) {
-			result.push_back(b);
+			result->push_back(b);
 		}
 	}
 }
@@ -274,7 +274,7 @@ void OctreeAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 	}
 }
 
-void OctreeAreaStore::getAreasInArea(std::vector<Area *> &result, Area *a, bool accept_overlap)
+void OctreeAreaStore::getAreasInArea(std::vector<Area *> *result, Area *a, bool accept_overlap)
 {
 	//TODO implement
 	// traverse tree down, and check areas on the way
@@ -282,7 +282,7 @@ void OctreeAreaStore::getAreasInArea(std::vector<Area *> &result, Area *a, bool 
 	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(b, b) || (accept_overlap && AST_AREAS_OVERLAP(a, b))) {
-			result.push_back(b);
+			result->push_back(b);
 		}
 	}
 }

@@ -23,7 +23,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "common/c_converter.h"
 #include "areastore.h"
 
-static inline void get_data_and_border_flags(u8 start_i, bool *borders, bool *data)
+static inline void get_data_and_border_flags(lua_State *L, u8 start_i,
+		bool *borders, bool *data)
 {
 	if (!lua_isboolean(L, start_i))
 		return;
@@ -35,7 +36,7 @@ static inline void get_data_and_border_flags(u8 start_i, bool *borders, bool *da
 	lua_pop(L, 1);
 }
 
-static inline void push_area(const Area *a, bool data)
+static inline void push_area(lua_State *L, const Area *a, bool data)
 {
 	lua_newtable(L);
 	lua_pushstring(L, "min");
@@ -51,14 +52,15 @@ static inline void push_area(const Area *a, bool data)
 	}
 }
 
-static inline void push_areas(const std::vector<Area *> &areas, bool borders, bool data)
+static inline void push_areas(lua_State *L, const std::vector<Area *> &areas,
+		bool borders, bool data)
 {
 	lua_newtable(L);
 	size_t cnt = areas.size();
 	for (size_t i = 0; i < cnt; i++) {
 		if (borders) {
 			lua_pushnumber(L, areas[i]->id);
-			push_area(areas[i], data);
+			push_area(L, areas[i], data);
 			lua_settable(L,-3);
 		} else {
 			lua_pushnumber(L, areas[i]->id);
@@ -84,14 +86,15 @@ int LuaAreaStore::l_get_area(lua_State *L)
 
 	u32 id = lua_tonumber(L, 2);
 
-	bool borders = true;
 	bool data = false;
-	get_data_and_border_flags(3, borders, data);
+	if (lua_isboolean(L, 3)) {
+		data = lua_toboolean(L, 3);
+	}
 
 	Area *res;
 	
-	ast->getArea(&res, id);
-	push_area(res, borders, data);
+	res = ast->getArea(id);
+	push_area(L, res, data);
 
 	return 1;
 }
@@ -106,18 +109,18 @@ int LuaAreaStore::l_get_areas_for_pos(lua_State *L)
 
 	bool borders = true;
 	bool data = false;
-	get_data_and_border_flags(3, borders, data);
+	get_data_and_border_flags(L, 3, &borders, &data);
 
 	std::vector<Area *> res;
 	
 	ast->getAreasForPos(&res, pos);
-	push_areas(res, borders, data);
+	push_areas(L, res, borders, data);
 
 	return 1;
 }
 
 // get_areas_for_area(area, borders, data)
-int LuaAreaStore::l_get_areas_for_area(lua_State *L)
+int LuaAreaStore::l_get_areas_in_area(lua_State *L)
 {
 	LuaAreaStore *o = checkobject(L, 1);
 	AreaStore *ast = o->as;
@@ -136,12 +139,12 @@ int LuaAreaStore::l_get_areas_for_area(lua_State *L)
 	bool accept_overlap = false;
 	if (lua_isboolean(L, 3)) {
 		accept_overlap = lua_toboolean(L, 3);
-		get_data_and_border_flags(4, borders, data);
+		get_data_and_border_flags(L, 4, &borders, &data);
 	}
 	std::vector<Area *> res;
 	
 	ast->getAreasInArea(&res, minedge, maxedge, accept_overlap);
-	push_areas(res, borders, data);
+	push_areas(L, res, borders, data);
 
 	return 1;
 }
@@ -173,7 +176,7 @@ int LuaAreaStore::l_to_string(lua_State *L)
 }
 
 // to_file(filename)
-int LuaAreaStore::l_to_string(lua_State *L)
+int LuaAreaStore::l_to_file(lua_State *L)
 {
 	// TODO: serialize to file
 	return 1;
@@ -516,17 +519,6 @@ LuaAreaStore::LuaAreaStore(const std::string &type)
 	} else {
 		this->as = new VectorAreaStore();
 	}
-}
-
-LuaAreaStore::LuaAreaStore(const std::string &filename)
-{
-	this->vm = new MMVManip(map);
-	this->is_mapgen_vm = false;
-
-	v3s16 bp1 = getNodeBlockPos(p1);
-	v3s16 bp2 = getNodeBlockPos(p2);
-	sortBoxVerticies(bp1, bp2);
-	vm->initialEmerge(bp1, bp2);
 }
 
 LuaAreaStore::~LuaAreaStore()
