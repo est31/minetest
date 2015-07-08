@@ -106,8 +106,8 @@ void VectorAreaStore::insertArea(Area *a)
 void VectorAreaStore::removeArea(u32 id)
 {
 	areas_map.erase(id);
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (b->id == id) {
 			m_areas.erase(m_areas.begin() + i);
@@ -119,8 +119,8 @@ void VectorAreaStore::removeArea(u32 id)
 
 void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
 {
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
 			result->push_back(b);
@@ -131,8 +131,8 @@ void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
 void VectorAreaStore::getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap)
 {
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(minedge, maxedge, b) || (accept_overlap &&
 				AST_AREAS_OVERLAP(minedge, maxedge, b))) {
@@ -143,8 +143,8 @@ void VectorAreaStore::getAreasInArea(std::vector<Area *> *result,
 
 bool VectorAreaStore::forEach(bool (*callback)(void *args, Area *a), void *args) const
 {
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		if (callback(args, m_areas[i])) {
 			return true;
 		}
@@ -154,8 +154,8 @@ bool VectorAreaStore::forEach(bool (*callback)(void *args, Area *a), void *args)
 
 VectorAreaStore::~VectorAreaStore()
 {
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		delete m_areas[i];
 	}
 }
@@ -220,7 +220,7 @@ typedef struct AreaStruct {
 	{
 		if (level >= 13) // if the level is too deep, we don't have substructs
 			return;
-		std::map<u64, Area*>::size_type s = areas_stored.size();
+		size_t s = areas_stored.size();
 		if (s > 64) {
 			// remove area, and add it below
 			// take the area with the best score
@@ -251,8 +251,8 @@ void OctreeAreaStore::removeArea(u32 id)
 	//TODO implement
 	// 1. traverse tree to find area (using unique id marking)
 	// 2. call remove() on the containing area
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (b->id == id) {
 			m_areas.erase(m_areas.begin() + i);
@@ -265,8 +265,8 @@ void OctreeAreaStore::getAreasForPos(std::vector<Area *> &result, v3s16 pos)
 {
 	//TODO implement
 	// traverse tree down as far as possible, and check areas on the way
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
 			result.push_back(b);
@@ -278,8 +278,8 @@ void OctreeAreaStore::getAreasInArea(std::vector<Area *> *result, Area *a, bool 
 {
 	//TODO implement
 	// traverse tree down, and check areas on the way
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		Area * b = m_areas[i];
 		if (AST_CONTAINS_AREA(b, b) || (accept_overlap && AST_AREAS_OVERLAP(a, b))) {
 			result->push_back(b);
@@ -296,8 +296,8 @@ OctreeAreaStore::~OctreeAreaStore()
 {
 	delete m_root_struct;
 	//TODO implement
-	std::vector<Area *>::size_type msiz = m_areas.size();
-	for (std::vector<Area *>::size_type i = 0; i < msiz; i++) {
+	size_t msiz = m_areas.size();
+	for (size_t i = 0; i < msiz; i++) {
 		delete *m_areas[i];
 	}
 }*/
