@@ -21,6 +21,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define AREASTORE_H_
 
 #include "irr_v3d.h"
+#include "noise.h" // for PcgRandom
 #include <map>
 #include <list>
 #include <vector>
@@ -47,11 +48,12 @@ typedef struct Area {
 class AreaStore {
 protected:
 	// TODO change to unordered_map when we can
-	std::map<u32, Area *> areas_map;
+	std::map<u32, Area> areas_map;
 	u16 count;
+	PcgRandom random;
 public:
-	virtual void insertArea(Area *a) = 0;
-	virtual void removeArea(u32 id) = 0;
+	virtual void insertArea(const Area &a) = 0;
+	virtual bool removeArea(u32 id) = 0;
 	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos) = 0;
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap) = 0;
@@ -64,8 +66,8 @@ public:
 	virtual ~AreaStore()
 	{}
 
-	u32 getFreeId(Area *a);
-	Area *getArea(u32 id) const;
+	u32 getFreeId(v3s16 minedge, v3s16 maxedge);
+	const Area *getArea(u32 id) const;
 	u16 size() const;
 	bool deserialize(std::istream &is);
 	void serialize(std::ostream &is) const;
@@ -74,8 +76,8 @@ public:
 
 class VectorAreaStore : public AreaStore {
 public:
-	virtual void insertArea(Area *a);
-	virtual void removeArea(u32 id);
+	virtual void insertArea(const Area &a);
+	virtual bool removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
@@ -89,8 +91,8 @@ typedef struct AreaStruct AreaStruct;
 
 class OctreeAreaStore : public AreaStore {
 public:
-	virtual void insertArea(Area *a);
-	virtual void removeArea(u32 id);
+	virtual void insertArea(const Area &a);
+	virtual bool removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> &result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);

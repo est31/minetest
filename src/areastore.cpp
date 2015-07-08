@@ -44,12 +44,42 @@ u16 AreaStore::size() const
 	return count;
 }
 
-Area *AreaStore::getArea(u32 id) const
+u32 AreaStore::getFreeId(v3s16 minedge, v3s16 maxedge)
 {
-	Area *res = NULL;
-	std::map<u32, Area *>::const_iterator itr = areas_map.find(id);
+	//TODO: improve this method:
+	// --> seed random properly at initialisation (eg in constructor)
+	// --> as random will be properly seeded, we won't have to.
+	random.seed(count);
+
+	u32 ret;
+	bool free;
+
+	ret = random.next();
+	free = (areas_map.find(ret) == areas_map.end());
+
+	if (free)
+		return ret;
+
+	// we need to seed more stuff
+	random.seed(minedge.X || ((u16)minedge.Y || ((u16)minedge.Z << 16) << 16));
+	random.seed(maxedge.X || ((u16)maxedge.Y || ((u16)maxedge.Z << 16) << 16));
+	
+	int keep_on = 100;
+	while (!free && keep_on--) {
+		ret = random.next();
+		free = (areas_map.find(ret) == areas_map.end());
+	}
+	if (!keep_on) // search failed
+		return 0;
+	return ret;
+}
+
+const Area *AreaStore::getArea(u32 id) const
+{
+	const Area *res = NULL;
+	std::map<u32, Area>::const_iterator itr = areas_map.find(id);
 	if (itr != areas_map.end()) {
-		res = itr->second;
+		res = &itr->second;
 	}
 	return res;
 }
@@ -62,13 +92,13 @@ bool AreaStore::deserialize(std::istream &is)
 	u16 count_areas = readU16(is);
 	for (u16 i = 0; i < count_areas; i++) {
 		// deserialize an area
-		Area *a = new Area();
-		a->id = readU32(is);
-		a->minedge = readV3S16(is);
-		a->maxedge = readV3S16(is);
-		a->datalen = readU16(is);
-		a->data = new char[a->datalen];
-		is.read((char *) a->data, a->datalen);
+		Area a;
+		a.id = readU32(is);
+		a.minedge = readV3S16(is);
+		a.maxedge = readV3S16(is);
+		a.datalen = readU16(is);
+		a.data = new char[a.datalen];
+		is.read((char *) a.data, a.datalen);
 		insertArea(a);
 	}
 	return true;
@@ -96,25 +126,31 @@ void AreaStore::serialize(std::ostream &os) const
 	forEach(&serialize_area, &os);
 }
 
-void VectorAreaStore::insertArea(Area *a)
+void VectorAreaStore::insertArea(const Area &a)
 {
-	areas_map[a->id] = a;
+	areas_map[a.id] = a;
+	m_areas.push_back(&areas_map[a.id]);
 	count++;
-	m_areas.push_back(a);
 }
 
-void VectorAreaStore::removeArea(u32 id)
+bool VectorAreaStore::removeArea(u32 id)
 {
-	areas_map.erase(id);
-	size_t msiz = m_areas.size();
-	for (size_t i = 0; i < msiz; i++) {
-		Area * b = m_areas[i];
-		if (b->id == id) {
-			m_areas.erase(m_areas.begin() + i);
-			count--;
-			break;
+	std::map<u32, Area>::iterator itr = areas_map.find(id);
+	if (itr != areas_map.end()) {
+		areas_map.erase(itr);
+		size_t msiz = m_areas.size();
+		for (size_t i = 0; i < msiz; i++) {
+			Area * b = m_areas[i];
+			if (b->id == id) {
+				m_areas.erase(m_areas.begin() + i);
+				count--;
+				return true;
+			}
 		}
+		// we should never get here, it means we did find it in map,
+		// but not in the vector
 	}
+	return false;
 }
 
 void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)

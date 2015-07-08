@@ -91,7 +91,7 @@ int LuaAreaStore::l_get_area(lua_State *L)
 		data = lua_toboolean(L, 3);
 	}
 
-	Area *res;
+	const Area *res;
 	
 	res = ast->getArea(id);
 	push_area(L, res, data);
@@ -119,7 +119,7 @@ int LuaAreaStore::l_get_areas_for_pos(lua_State *L)
 	return 1;
 }
 
-// get_areas_for_area(area, borders, data)
+// l_get_areas_in_area(area, borders, data)
 int LuaAreaStore::l_get_areas_in_area(lua_State *L)
 {
 	LuaAreaStore *o = checkobject(L, 1);
@@ -152,26 +152,58 @@ int LuaAreaStore::l_get_areas_in_area(lua_State *L)
 // insert_area(area)
 int LuaAreaStore::l_insert_area(lua_State *L)
 {
-	// TODO:
-	// 1. find free id
-	// 2. insert area
-	// 3. return true (for success)
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	Area a;
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	lua_getfield(L, 2, "min");
+	a.minedge = check_v3s16(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "max");
+	a.maxedge = check_v3s16(L, -1);
+	lua_pop(L, 1);
+
+	a.id = ast->getFreeId(a.minedge, a.maxedge);
+
+	if (a.id != 0) {
+		// TODO data
+
+		ast->insertArea(a);
+
+		lua_pushboolean(L, true);
+	} else {
+		lua_pushboolean(L, false);
+	}
 	return 1;
 }
 
 // remove_area(id)
 int LuaAreaStore::l_remove_area(lua_State *L)
 {
-	// TODO:
-	// 1. remove area with id
-	// 3. return success boolean value
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	u32 id = lua_tonumber(L, 2);
+	bool success = ast->removeArea(id);
+
+	lua_pushboolean(L, success);
 	return 1;
 }
 
 // to_string()
 int LuaAreaStore::l_to_string(lua_State *L)
 {
-	// TODO: serialize to string
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	std::ostringstream os(std::ios_base::binary);
+	ast->serialize(os);
+	std::string str = os.str();
+
+	lua_pushlstring(L, str.c_str(), str.length());
 	return 1;
 }
 
