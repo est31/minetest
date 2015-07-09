@@ -342,7 +342,7 @@ void LuaAreaStore::Register(lua_State *L)
 	luaL_openlib(L, 0, methods, 0);  // fill methodtable
 	lua_pop(L, 1);  // drop methodtable
 
-	// Can be created from Lua (VoxelManip())
+	// Can be created from Lua (AreaStore())
 	lua_register(L, className, create_object);
 }
 
