@@ -37,9 +37,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #define AST_EXTREMIFY(min, max, pa, pb) \
-	min.X = MYMIN(pa.X, pb.X); \
-	min.Y = MYMIN(pa.Y, pb.Y); \
-	min.Z = MYMIN(pa.Z, pb.Z);
+	min.X = MYMIN(pa.X, pb.X);      \
+	min.Y = MYMIN(pa.Y, pb.Y);      \
+	min.Z = MYMIN(pa.Z, pb.Z);      \
+	max.X = MYMAX(pa.X, pb.X);      \
+	max.Y = MYMAX(pa.Y, pb.Y);      \
+	max.Z = MYMAX(pa.Z, pb.Z);
 
 typedef struct Area {
 	Area()
