@@ -356,8 +356,8 @@ public:
 				m_queue.pop_back();
 			}
 
-			entry.first = m_queue.begin();
 			m_queue.push_front(key);
+			entry.first = m_queue.begin();
 		}
 		return ret;
 	}

@@ -100,7 +100,7 @@ public:
 	{}
 
 	AreaStore() :
-		cache_enabled(false),
+		cache_enabled(true),
 		m_cacheblock_radius(64),
 		m_res_cache(1000, &cacheMiss, this)
 	{
