@@ -2610,6 +2610,7 @@ Every area has a `data` string attribute to store additional information.
         max = position,
         data = string,
       }
+* `reserve(count)`: reserves system resources for at most `count` many contained areas. Only needed for efficiency.
 * `remove_area(id)`: removes the area with the given id from the store, returns success.
 * `to_string()`: serializes the AreaStore to a string
 * `to_file(filename)`: serializes the AreaStore to a file
