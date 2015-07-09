@@ -25,7 +25,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "areastore.h"
 #include "filesys.h"
 #include "log.h" // TODO remove (for debugging)
+#ifndef ANDROID
 #include "cmake_config.h"
+#endif
 #include <fstream>
 
 static inline void get_data_and_border_flags(lua_State *L, u8 start_i,

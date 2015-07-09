@@ -27,7 +27,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <istream>
 #include "util/numeric.h"
-#include "cmake_config.h"
+#ifndef ANDROID
+	#include "cmake_config.h"
+#endif
 
 #if USE_SPATIAL
 
