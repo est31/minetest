@@ -22,12 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "lua_api/l_base.h"
 #include "irr_v3d.h"
-#include <map>
 #include "areastore.h"
-
-class Map;
-class MapBlock;
-class MMVManip;
 
 /*
   AreaStore
