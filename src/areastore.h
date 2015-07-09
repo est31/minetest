@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <list>
 #include <vector>
 #include <istream>
+#include "util/container.h"
 #include "util/numeric.h"
 #ifndef ANDROID
 	#include "cmake_config.h"
@@ -96,12 +97,10 @@ public:
 	{}
 
 	AreaStore() :
-	m_res_cache(1000, &cacheMiss, this),
-	cache_enabled(false),
-	m_cacheblock_radius(64),
+		cache_enabled(false),
+		m_cacheblock_radius(64),
+		m_res_cache(1000, &cacheMiss, this)
 	{
-		cache_enabled = false;
-		m_cacheblock_radius = 64;
 	}
 
 	void setCacheEnabled(bool enabled);
@@ -112,9 +111,9 @@ public:
 	bool deserialize(std::istream &is);
 	void serialize(std::ostream &is) const;
 private:
-	static void cacheMiss(void *data, const K &val, V *dest);
+	static void cacheMiss(void *data, const v3s16 &mpos, std::vector<Area *> *dest);
 	u8 m_cacheblock_radius; // if you modify this, call invalidateCache()
-	LRUCache<v3s16, std::vector<Area *>> m_res_cache;
+	LRUCache<v3s16, std::vector<Area *> > m_res_cache;
 
 };
 

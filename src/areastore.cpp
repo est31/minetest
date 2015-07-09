@@ -150,7 +150,7 @@ void AreaStore::setCacheEnabled(bool enabled)
 	}
 }
 
-inline static void other_val(s16 p, u8 r)
+inline static s16 other_val(s16 p, u8 r)
 {
 	return p >= 0 ? (p + r - 1) : (p - r + 1);
 }
@@ -178,11 +178,11 @@ void AreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
 {
 	if (cache_enabled) {
 		v3s16 mblock = getContainerPos(pos, m_cacheblock_radius);
-		std::vector<Area *> &pre_list = m_res_cache.lookupCache(mblock);
+		const std::vector<Area *> *pre_list = m_res_cache.lookupCache(mblock);
 
-		size_t s_p_l = pre_list.size();
+		size_t s_p_l = pre_list->size();
 		for (size_t i = 0; i < s_p_l; i++) {
-			Area *b = pre_list[i];
+			Area *b = (*pre_list)[i];
 			if (AST_CONTAINS_PT(b, pos)) {
 				result->push_back(b);
 			}

@@ -327,16 +327,16 @@ public:
 		m_queue.clear();
 	}
 
-	const *V lookupCache(const K &key)
+	const V *lookupCache(const K &key)
 	{
-		cache_type::iterator it = m_map.find(key);
-		V &ret;
+		typename cache_type::iterator it = m_map.find(key);
+		V *ret;
 		if (it != m_map.end()) {
 			// found!
 
-			std::pair<std::list<K>::iterator, V> &entry = it->second;
+			cache_entry_t &entry = it->second;
 
-			ret = entry.second;
+			ret = &entry.second;
 
 			// update the usage information
 			m_queue.erase(entry.first);
@@ -344,9 +344,9 @@ public:
 
 		} else {
 			// cache miss -- enter into cache
-			std::pair<std::list<K>::iterator, V> &entry =
+			cache_entry_t &entry =
 				m_map[key];
-			ret = entry.second;
+			ret = &entry.second;
 			m_cache_miss(m_cache_miss_data, key, &entry.second);
 
 			// delete old entries
@@ -365,7 +365,8 @@ private:
 	void (*m_cache_miss)(void *data, const K &key, V *dest);
 	void *m_cache_miss_data;
 	size_t m_limit;
-	typedef std::map<K, std::pair<std::list<K>::iterator, V> > cache_type;
+	typedef typename std::template pair<typename std::template list<K>::iterator, V> cache_entry_t;
+	typedef std::template map<K, cache_entry_t> cache_type;
 	cache_type m_map;
 	std::list<K> m_queue;
 };
