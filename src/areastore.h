@@ -27,6 +27,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <vector>
 #include <istream>
 #include "util/numeric.h"
+#include "cmake_config.h"
+
+#if USE_SPATIAL
+
+#include <SpatialIndex.h>
+#include "util/serialize.h"
+#endif
 
 typedef struct Area {
 	Area()
@@ -103,6 +110,66 @@ public:
 private:
 	std::vector<Area *> m_areas;
 };
+
+#if USE_SPATIAL
+
+//#define SPATIAL_DLEN sizeof(u32)
+
+class SpatialAreaStore : public AreaStore {
+public:
+	SpatialAreaStore();
+	virtual void insertArea(const Area &a);
+	virtual bool removeArea(u32 id);
+	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
+	virtual void getAreasInArea(std::vector<Area *> *result,
+		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
+	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
+
+	virtual ~SpatialAreaStore();
+private:
+	SpatialIndex::ISpatialIndex *m_tree;
+	SpatialIndex::IStorageManager *m_storagemanager;
+
+	class VectorResultVisitor : public SpatialIndex::IVisitor {
+	private:
+		SpatialAreaStore *m_store;
+		std::vector<Area *> *m_result;
+	public:
+		VectorResultVisitor(std::vector<Area *> *result, SpatialAreaStore *store)
+		{
+			m_store = store;
+			m_result = result;
+		}
+
+		virtual void visitNode(const SpatialIndex::INode &in)
+		{
+		}
+
+		virtual void visitData(const SpatialIndex::IData &in)
+		{
+			/*uint32_t len;
+			uint8_t *result;
+			in.getData(len, &result);
+			assert(len == SPATIAL_DLEN);
+			u32 id = readU32(result);*/
+			u32 id = in.getIdentifier();
+
+			std::map<u32, Area>::iterator itr = m_store->areas_map.find(id);
+			assert(itr != m_store->areas_map.end());
+			m_result->push_back(&itr->second);
+		}
+
+		virtual void visitData(std::vector<const SpatialIndex::IData *> &v)
+		{
+			for (size_t i = 0; i < v.size(); i++)
+				visitData(*(v[i]));
+		}
+
+		~VectorResultVisitor() {}
+	};
+};
+
+#endif
 
 typedef struct AreaStruct AreaStruct;
 

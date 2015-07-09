@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "areastore.h"
 #include "filesys.h"
 #include "log.h" // TODO remove (for debugging)
+#include "cmake_config.h"
 #include <fstream>
 
 static inline void get_data_and_border_flags(lua_State *L, u8 start_i,
@@ -271,15 +272,21 @@ int LuaAreaStore::l_from_file(lua_State *L)
 
 LuaAreaStore::LuaAreaStore()
 {
+#if USE_SPATIAL
+	this->as = new SpatialAreaStore();
+#else
 	this->as = new VectorAreaStore();
+#endif
 }
 
 LuaAreaStore::LuaAreaStore(const std::string &type)
 {
 	if (type == "Octree") {
 		//this->as = new OctreeAreaStore();
-	} else if (type == "LibSpatial-R*") {
-		//this->as = new LibSpatialAreaStore();
+#if USE_SPATIAL
+	} else if (type == "LibSpatial") {
+		this->as = new SpatialAreaStore();
+#endif
 	} else {
 		this->as = new VectorAreaStore();
 	}
