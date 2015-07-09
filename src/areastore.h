@@ -37,7 +37,7 @@ typedef struct Area {
 
 	~Area()
 	{
-		delete[] data;
+		delete[] data; // TODO perhaps overthink this...
 	}
 
 	void extremifyEdges()

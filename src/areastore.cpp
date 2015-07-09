@@ -19,8 +19,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
  
 #include "areastore.h"
 #include "util/serialize.h"
+#include "log.h" // TODO remove (for debugging)
 
-#define AST_SMALLER_EQ_AS(p, q) ((p.X <= q.X) && (p.Y < q.Y) && (p.Z < q.Z))
+#define AST_SMALLER_EQ_AS(p, q) ((p.X <= q.X) && (p.Y <= q.Y) && (p.Z <= q.Z))
 
 #define AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, d) (              \
 	((amine.d >= b->minedge.d) && (amine.d <= b->maxedge.d))     \
@@ -129,7 +130,7 @@ void AreaStore::serialize(std::ostream &os) const
 void VectorAreaStore::insertArea(const Area &a)
 {
 	areas_map[a.id] = a;
-	m_areas.push_back(&areas_map[a.id]);
+	m_areas.push_back(&(areas_map[a.id]));
 	count++;
 }
 
@@ -157,7 +158,7 @@ void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
 {
 	size_t msiz = m_areas.size();
 	for (size_t i = 0; i < msiz; i++) {
-		Area * b = m_areas[i];
+		Area *b = m_areas[i];
 		if (AST_CONTAINS_PT(b, pos)) {
 			result->push_back(b);
 		}

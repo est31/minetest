@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "cpp_api/s_security.h"
 #include "areastore.h"
 #include "filesys.h"
+#include "log.h" // TODO remove (for debugging)
 #include <fstream>
 
 static inline void get_data_and_border_flags(lua_State *L, u8 start_i,
@@ -182,6 +183,8 @@ int LuaAreaStore::l_insert_area(lua_State *L)
 		memcpy(a.data, data, d_len);
 
 		ast->insertArea(a);
+
+		a.data = NULL; // To not delete our array after a is destructed
 
 		lua_pushboolean(L, true);
 	} else {
