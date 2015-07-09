@@ -26,6 +26,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <list>
 #include <vector>
 #include <istream>
+#include "util/numeric.h"
 
 typedef struct Area {
 	Area()
@@ -33,9 +34,26 @@ typedef struct Area {
 		data = NULL;
 		datalen = 0;
 	}
+
 	~Area()
 	{
 		delete[] data;
+	}
+
+	void extremifyEdges()
+	{
+		v3s16 nminedge;
+		v3s16 nmaxedge;
+
+		nminedge.X = MYMIN(minedge.X, maxedge.X);
+		nminedge.Y = MYMIN(minedge.Y, maxedge.Y);
+		nminedge.Z = MYMIN(minedge.Z, maxedge.Z);
+		nmaxedge.X = MYMAX(minedge.X, maxedge.X);
+		nmaxedge.Y = MYMAX(minedge.Y, maxedge.Y);
+		nmaxedge.Z = MYMAX(minedge.Z, maxedge.Z);
+
+		maxedge = nmaxedge;
+		minedge = nminedge;
 	}
 
 	u32 id;

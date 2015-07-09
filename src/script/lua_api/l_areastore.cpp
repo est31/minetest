@@ -169,10 +169,19 @@ int LuaAreaStore::l_insert_area(lua_State *L)
 	a.maxedge = check_v3s16(L, -1);
 	lua_pop(L, 1);
 
+	a.extremifyEdges();
 	a.id = ast->getFreeId(a.minedge, a.maxedge);
 
 	if (a.id != 0) {
-		// TODO data
+		lua_getfield(L, 2, "data");
+		size_t d_len;
+		const char *data = luaL_checklstring(L,-1, &d_len);
+		lua_pop(L, 1);
+
+		a.data = new char[d_len];
+		a.datalen = d_len;
+
+		memcpy(a.data, data, d_len);
 
 		ast->insertArea(a);
 
