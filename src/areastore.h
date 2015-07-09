@@ -171,46 +171,4 @@ private:
 
 #endif
 
-typedef struct AreaStruct AreaStruct;
-
-class OctreeAreaStore : public AreaStore {
-public:
-	virtual void insertArea(const Area &a);
-	virtual bool removeArea(u32 id);
-	virtual void getAreasForPos(std::vector<Area *> &result, v3s16 pos);
-	virtual void getAreasInArea(std::vector<Area *> &result,
-		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
-	~OctreeAreaStore();
-private:
-	AreaStruct *m_root_struct;
-	std::map<u32, Area*> areas_stored;
-};
-
-/*//TODO make static
-//TODO find better name
-typedef struct AreaStruct {
-	AreaStruct() {
-		for (int i = 0; i < 7; i++)
-			substructs[i] = 0;
-	}
-	AreaStruct *substructs[8];
-
-	//every area is stored in exactly one areas_stored map,
-	//but can be inside multiple areas_inside maps.
-	//TODO make this std::unordered_map when we can
-	std::map<u64, Area*> areas_stored;
-	std::list<Area *> areas_inside;
-} AreaStruct;
-
-class AreaStore {
-public:
-	// id will be overwritten
-	void insertArea(Area * a);
-	void removeArea(u64 id);
-	std::vector<Area *> getAreasForPos(v3s16 pos);
-	std::vector<Area *> getAreasinArea(Area * a, bool accept_overlap);
-private:
-	AreaStruct m_as;
-};*/
-
 #endif /* AREASTORE_H_ */
