@@ -21,7 +21,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "lua_api/l_areastore.h"
 #include "lua_api/l_internal.h"
 #include "common/c_converter.h"
+#include "cpp_api/s_security.h"
 #include "areastore.h"
+#include "filesys.h"
+#include <fstream>
 
 static inline void get_data_and_border_flags(lua_State *L, u8 start_i,
 		bool *borders, bool *data)
@@ -175,6 +178,7 @@ int LuaAreaStore::l_insert_area(lua_State *L)
 
 		lua_pushboolean(L, true);
 	} else {
+		// couldn't get free id
 		lua_pushboolean(L, false);
 	}
 	return 1;
@@ -210,21 +214,48 @@ int LuaAreaStore::l_to_string(lua_State *L)
 // to_file(filename)
 int LuaAreaStore::l_to_file(lua_State *L)
 {
-	// TODO: serialize to file
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	const char *filename = luaL_checkstring(L, 2);
+	CHECK_SECURE_PATH_OPTIONAL(L, filename);
+
+	std::ostringstream os(std::ios_base::binary);
+	ast->serialize(os);
+
+	lua_pushboolean(L, fs::safeWriteToFile(filename, os.str()));
 	return 1;
 }
 
 // from_string(str)
 int LuaAreaStore::l_from_string(lua_State *L)
 {
-	// TODO: deserialize from string
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	size_t len;
+	const char *str = luaL_checklstring(L, 2, &len);
+
+	std::istringstream is(std::string(str, len), std::ios::binary);
+	bool success = ast->deserialize(is);
+
+	lua_pushboolean(L, success);
 	return 1;
 }
 
 // from_file(filename)
 int LuaAreaStore::l_from_file(lua_State *L)
 {
-	// TODO: deserialize from file
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	const char *filename = luaL_checkstring(L, 2);
+	CHECK_SECURE_PATH_OPTIONAL(L, filename);
+
+	std::ifstream is(filename, std::ios::binary);
+	bool success = ast->deserialize(is);
+
+	lua_pushboolean(L, success);
 	return 1;
 }
 
