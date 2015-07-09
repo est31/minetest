@@ -195,6 +195,17 @@ int LuaAreaStore::l_insert_area(lua_State *L)
 	return 1;
 }
 
+// reserve(count)
+int LuaAreaStore::l_reserve(lua_State *L)
+{
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	size_t count = luaL_checknumber(L, 2);
+	ast->reserve(count);
+	return 0;
+}
+
 // remove_area(id)
 int LuaAreaStore::l_remove_area(lua_State *L)
 {
@@ -360,6 +371,7 @@ const luaL_reg LuaAreaStore::methods[] = {
 	luamethod(LuaAreaStore, get_areas_for_pos),
 	luamethod(LuaAreaStore, get_areas_in_area),
 	luamethod(LuaAreaStore, insert_area),
+	luamethod(LuaAreaStore, reserve),
 	luamethod(LuaAreaStore, remove_area),
 	luamethod(LuaAreaStore, to_string),
 	luamethod(LuaAreaStore, to_file),

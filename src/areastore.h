@@ -78,6 +78,7 @@ protected:
 	PcgRandom random;
 public:
 	virtual void insertArea(const Area &a) = 0;
+	virtual void reserve(size_t count) {};
 	virtual bool removeArea(u32 id) = 0;
 	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos) = 0;
 	virtual void getAreasInArea(std::vector<Area *> *result,
@@ -102,6 +103,7 @@ public:
 class VectorAreaStore : public AreaStore {
 public:
 	virtual void insertArea(const Area &a);
+	virtual void reserve(size_t count);
 	virtual bool removeArea(u32 id);
 	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> *result,

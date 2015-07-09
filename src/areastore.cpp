@@ -140,6 +140,11 @@ void VectorAreaStore::insertArea(const Area &a)
 	count++;
 }
 
+void VectorAreaStore::reserve(size_t count)
+{
+	m_areas.reserve(count);
+}
+
 bool VectorAreaStore::removeArea(u32 id)
 {
 	std::map<u32, Area>::iterator itr = areas_map.find(id);

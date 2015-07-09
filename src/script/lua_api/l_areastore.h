@@ -45,6 +45,7 @@ private:
 	static int l_get_areas_for_pos(lua_State *L);
 	static int l_get_areas_in_area(lua_State *L);
 	static int l_insert_area(lua_State *L);
+	static int l_reserve(lua_State *L);
 	static int l_remove_area(lua_State *L);
 
 	static int l_to_string(lua_State *L);
