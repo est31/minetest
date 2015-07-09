@@ -188,14 +188,6 @@ bool VectorAreaStore::forEach(bool (*callback)(void *args, Area *a), void *args)
 	return false;
 }
 
-VectorAreaStore::~VectorAreaStore()
-{
-	size_t msiz = m_areas.size();
-	for (size_t i = 0; i < msiz; i++) {
-		delete m_areas[i];
-	}
-}
-
 static u8 get_cost(v3s16 minedge, v3s16 maxedge, unsigned char level) {
 	u8 cost = 0;
 

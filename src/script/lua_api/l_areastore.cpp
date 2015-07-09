@@ -32,11 +32,9 @@ static inline void get_data_and_border_flags(lua_State *L, u8 start_i,
 	if (!lua_isboolean(L, start_i))
 		return;
 	*borders = lua_toboolean(L, start_i);
-	lua_pop(L, 1);
 	if (!lua_isboolean(L, start_i + 1))
 		return;
 	*data = lua_toboolean(L, start_i + 1);
-	lua_pop(L, 1);
 }
 
 static inline void push_area(lua_State *L, const Area *a, bool data)

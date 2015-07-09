@@ -100,7 +100,6 @@ public:
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
-	~VectorAreaStore();
 private:
 	std::vector<Area *> m_areas;
 };
