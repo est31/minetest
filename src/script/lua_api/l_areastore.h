@@ -52,24 +52,6 @@ private:
 
 	static int l_from_string(lua_State *L);
 	static int l_from_file(lua_State *L);
-	/*static int l_write_to_map(lua_State *L);
-
-	static int l_get_node_at(lua_State *L);
-	static int l_set_node_at(lua_State *L);
-
-	static int l_update_map(lua_State *L);
-	static int l_update_liquids(lua_State *L);
-
-	static int l_calc_lighting(lua_State *L);
-	static int l_set_lighting(lua_State *L);
-	static int l_get_light_data(lua_State *L);
-	static int l_set_light_data(lua_State *L);
-
-	static int l_get_param2_data(lua_State *L);
-	static int l_set_param2_data(lua_State *L);
-
-	static int l_was_modified(lua_State *L);
-	static int l_get_emerged_area(lua_State *L);*/
 
 public:
 	AreaStore *as;

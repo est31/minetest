@@ -121,7 +121,7 @@ int LuaAreaStore::l_get_areas_for_pos(lua_State *L)
 	return 1;
 }
 
-// l_get_areas_in_area(area, borders, data)
+// get_areas_in_area(area, accept_overlap, borders, data)
 int LuaAreaStore::l_get_areas_in_area(lua_State *L)
 {
 	LuaAreaStore *o = checkobject(L, 1);
