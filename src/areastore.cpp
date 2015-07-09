@@ -218,7 +218,6 @@ void SpatialAreaStore::insertArea(const Area &a)
 {
 	areas_map[a.id] = a;
 	m_tree->insertData(0, NULL, get_spatial_region(a.minedge, a.maxedge), a.id);
-	// TODO
 	count++;
 }
 
@@ -255,7 +254,7 @@ void SpatialAreaStore::getAreasInArea(std::vector<Area *> *result,
 
 bool SpatialAreaStore::forEach(bool (*callback)(void *args, Area *a), void *args) const
 {
-	// TODO
+	// TODO ?? (this is only needed for serialisation, but libspatial has its own serialisation)
 	return false;
 }
 
