@@ -44,14 +44,14 @@ private:
 
 	static int l_get_areas_for_pos(lua_State *L);
 	static int l_get_areas_in_area(lua_State *L);
-	static int l_insert_area(lua_State *L); // TODO
-	static int l_remove_area(lua_State *L); // TODO
+	static int l_insert_area(lua_State *L);
+	static int l_remove_area(lua_State *L);
 
-	static int l_to_string(lua_State *L); // TODO
-	static int l_to_file(lua_State *L); // TODO
+	static int l_to_string(lua_State *L);
+	static int l_to_file(lua_State *L);
 
-	static int l_from_string(lua_State *L); // TODO
-	static int l_from_file(lua_State *L); // TODO
+	static int l_from_string(lua_State *L);
+	static int l_from_file(lua_State *L);
 	/*static int l_write_to_map(lua_State *L);
 
 	static int l_get_node_at(lua_State *L);
