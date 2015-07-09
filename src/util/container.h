@@ -321,6 +321,12 @@ public:
 		m_cache_miss_data = data;
 	}
 
+	void setLimit(size_t limit)
+	{
+		m_limit = limit;
+		invalidate();
+	}
+
 	void invalidate()
 	{
 		m_map.clear();
@@ -368,6 +374,7 @@ private:
 	typedef typename std::template pair<typename std::template list<K>::iterator, V> cache_entry_t;
 	typedef std::template map<K, cache_entry_t> cache_type;
 	cache_type m_map;
+	// we can't use std::deque here, because its iterators get invalidated
 	std::list<K> m_queue;
 };
 

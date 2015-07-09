@@ -100,7 +100,7 @@ public:
 	{}
 
 	AreaStore() :
-		cache_enabled(true),
+		cache_enabled(false),
 		m_cacheblock_radius(64),
 		m_res_cache(1000, &cacheMiss, this)
 	{
@@ -137,8 +137,6 @@ private:
 
 #if USE_SPATIAL
 
-//#define SPATIAL_DLEN sizeof(u32)
-
 class SpatialAreaStore : public AreaStore {
 protected:
 	virtual void getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos);
@@ -172,11 +170,6 @@ private:
 
 		virtual void visitData(const SpatialIndex::IData &in)
 		{
-			/*uint32_t len;
-			uint8_t *result;
-			in.getData(len, &result);
-			assert(len == SPATIAL_DLEN);
-			u32 id = readU32(result);*/
 			u32 id = in.getIdentifier();
 
 			std::map<u32, Area>::iterator itr = m_store->areas_map.find(id);

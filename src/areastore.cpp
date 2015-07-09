@@ -330,7 +330,6 @@ SpatialAreaStore::~SpatialAreaStore()
 
 SpatialAreaStore::SpatialAreaStore()
 {
-	errorstream << "SpatialAreaStore created" << std::endl;
 	m_storagemanager =
 		SpatialIndex::StorageManager::createNewMemoryStorageManager();
 	SpatialIndex::id_type id;
