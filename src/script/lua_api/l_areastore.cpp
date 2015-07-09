@@ -221,6 +221,37 @@ int LuaAreaStore::l_remove_area(lua_State *L)
 	return 1;
 }
 
+// set_cache_params(params)
+int LuaAreaStore::l_set_cache_params(lua_State *L)
+{
+	LuaAreaStore *o = checkobject(L, 1);
+	AreaStore *ast = o->as;
+
+	bool enabled = true;
+	u8 block_radius = 64;
+	size_t limit = 1000;
+
+	luaL_checktype(L, 2, LUA_TTABLE);
+	lua_getfield(L, 2, "enabled");
+	if (lua_isboolean(L, -1))
+		enabled = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "block_radius");
+	if (lua_isnumber(L, -1))
+		enabled = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, 2, "limit");
+	if (lua_isnumber(L, -1))
+		limit = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	ast->setCacheParams(enabled, block_radius, limit);
+
+	return 0;
+}
+
 // to_string()
 int LuaAreaStore::l_to_string(lua_State *L)
 {
@@ -375,6 +406,7 @@ const luaL_reg LuaAreaStore::methods[] = {
 	luamethod(LuaAreaStore, insert_area),
 	luamethod(LuaAreaStore, reserve),
 	luamethod(LuaAreaStore, remove_area),
+	luamethod(LuaAreaStore, set_cache_params),
 	luamethod(LuaAreaStore, to_string),
 	luamethod(LuaAreaStore, to_file),
 	luamethod(LuaAreaStore, from_string),

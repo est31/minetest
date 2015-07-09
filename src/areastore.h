@@ -100,13 +100,13 @@ public:
 	{}
 
 	AreaStore() :
-		cache_enabled(false),
+		cache_enabled(true),
 		m_cacheblock_radius(64),
 		m_res_cache(1000, &cacheMiss, this)
 	{
 	}
 
-	void setCacheEnabled(bool enabled);
+	void setCacheParams(bool enabled, u8 block_radius, size_t limit);
 
 	u32 getFreeId(v3s16 minedge, v3s16 maxedge);
 	const Area *getArea(u32 id) const;

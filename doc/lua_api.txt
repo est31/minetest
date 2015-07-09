@@ -2612,6 +2612,13 @@ Every area has a `data` string attribute to store additional information.
       }
 * `reserve(count)`: reserves system resources for at most `count` many contained areas. Only needed for efficiency.
 * `remove_area(id)`: removes the area with the given id from the store, returns success.
+* `set_cache_params(params)`: sets params for the included prefiltering cache. Calling invalidates the cache, so that its elements have to be newly generated.
+    * `params`:
+      {
+        enabled = boolean, -- whether to enable, default true
+        block_radius = number, -- the radius of the blocks the cache generates prefiltered lists for, minimum 16, default 64
+        limit = number, -- the cache's size, minimum 20, default 1000
+      }
 * `to_string()`: serializes the AreaStore to a string
 * `to_file(filename)`: serializes the AreaStore to a file
 * `from_string(str)`: deserializes the given string `str`, and load its areas into the AreaStore

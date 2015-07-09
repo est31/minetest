@@ -143,12 +143,14 @@ void AreaStore::invalidateCache()
 }
 
 
-void AreaStore::setCacheEnabled(bool enabled)
+void AreaStore::setCacheParams(bool enabled, u8 block_radius, size_t limit)
 {
-	if (!enabled && cache_enabled) {
-		invalidateCache();
-	}
+	cache_enabled = enabled;
+	m_cacheblock_radius = MYMAX(block_radius, 16);
+	m_res_cache.setLimit(MYMAX(limit, 20));
+	invalidateCache();
 }
+
 
 inline static s16 other_val(s16 p, u8 r)
 {

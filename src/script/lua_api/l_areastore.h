@@ -43,6 +43,8 @@ private:
 	static int l_reserve(lua_State *L);
 	static int l_remove_area(lua_State *L);
 
+	static int l_set_cache_params(lua_State *L);
+
 	static int l_to_string(lua_State *L);
 	static int l_to_file(lua_State *L);
 
