@@ -19,6 +19,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
  
 #include "areastore.h"
 #include "util/serialize.h"
+#include "util/container.h"
 #include "log.h" // TODO remove (for debugging)
 
 #if USE_SPATIAL
@@ -133,6 +134,65 @@ void AreaStore::serialize(std::ostream &os) const
 	forEach(&serialize_area, &os);
 }
 
+
+void AreaStore::invalidateCache()
+{
+	if (cache_enabled) {
+		m_res_cache.invalidate();
+	}
+}
+
+
+void AreaStore::setCacheEnabled(bool enabled)
+{
+	if (!enabled && cache_enabled) {
+		invalidateCache();
+	}
+}
+
+inline static void other_val(s16 p, u8 r)
+{
+	return p >= 0 ? (p + r - 1) : (p - r + 1);
+}
+
+void AreaStore::cacheMiss(void *data, const v3s16 &mpos, std::vector<Area *> *dest)
+{
+	AreaStore *as = (AreaStore *)data;
+	u8 r = as->m_cacheblock_radius;
+
+	// get the point at the other side of the mapblock
+	v3s16 mpos_other;
+	mpos_other.X = other_val(mpos.X, r);
+	mpos_other.Y = other_val(mpos.Y, r);
+	mpos_other.Z = other_val(mpos.Z, r);
+
+	// extremify both points
+	v3s16 minedge;
+	v3s16 maxedge;
+	AST_EXTREMIFY(minedge, maxedge, mpos, mpos_other)
+
+	as->getAreasInArea(dest, minedge, maxedge, true);
+}
+
+void AreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
+{
+	if (cache_enabled) {
+		v3s16 mblock = getContainerPos(pos, m_cacheblock_radius);
+		std::vector<Area *> &pre_list = m_res_cache.lookupCache(mblock);
+
+		size_t s_p_l = pre_list.size();
+		for (size_t i = 0; i < s_p_l; i++) {
+			Area *b = pre_list[i];
+			if (AST_CONTAINS_PT(b, pos)) {
+				result->push_back(b);
+			}
+		}
+	} else {
+		return getAreasForPosImpl(result, pos);
+	}
+}
+
+
 void VectorAreaStore::insertArea(const Area &a)
 {
 	areas_map[a.id] = a;
@@ -165,7 +225,7 @@ bool VectorAreaStore::removeArea(u32 id)
 	return false;
 }
 
-void VectorAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
+void VectorAreaStore::getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos)
 {
 	size_t msiz = m_areas.size();
 	for (size_t i = 0; i < msiz; i++) {
@@ -239,7 +299,7 @@ bool SpatialAreaStore::removeArea(u32 id)
 	}
 }
 
-void SpatialAreaStore::getAreasForPos(std::vector<Area *> *result, v3s16 pos)
+void SpatialAreaStore::getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos)
 {
 	VectorResultVisitor visitor(result, this);
 	m_tree->pointLocationQuery(get_spatial_point(pos), visitor);

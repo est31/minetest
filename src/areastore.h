@@ -30,12 +30,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef ANDROID
 	#include "cmake_config.h"
 #endif
-
 #if USE_SPATIAL
-
-#include <SpatialIndex.h>
-#include "util/serialize.h"
+	#include <SpatialIndex.h>
+	#include "util/serialize.h"
 #endif
+
+#define AST_EXTREMIFY(min, max, pa, pb) \
+	min.X = MYMIN(pa.X, pb.X); \
+	min.Y = MYMIN(pa.Y, pb.Y); \
+	min.Z = MYMIN(pa.Z, pb.Z);
 
 typedef struct Area {
 	Area()
@@ -54,12 +57,7 @@ typedef struct Area {
 		v3s16 nminedge;
 		v3s16 nmaxedge;
 
-		nminedge.X = MYMIN(minedge.X, maxedge.X);
-		nminedge.Y = MYMIN(minedge.Y, maxedge.Y);
-		nminedge.Z = MYMIN(minedge.Z, maxedge.Z);
-		nmaxedge.X = MYMAX(minedge.X, maxedge.X);
-		nmaxedge.Y = MYMAX(minedge.Y, maxedge.Y);
-		nmaxedge.Z = MYMAX(minedge.Z, maxedge.Z);
+		AST_EXTREMIFY(nminedge, nmaxedge, minedge, maxedge)
 
 		maxedge = nmaxedge;
 		minedge = nminedge;
@@ -78,11 +76,14 @@ protected:
 	std::map<u32, Area> areas_map;
 	u16 count;
 	PcgRandom random;
+	void invalidateCache();
+	virtual void getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos) = 0;
+	bool cache_enabled; // don't write to this from subclasses, only read.
 public:
 	virtual void insertArea(const Area &a) = 0;
 	virtual void reserve(size_t count) {};
 	virtual bool removeArea(u32 id) = 0;
-	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos) = 0;
+	void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap) = 0;
 
@@ -94,20 +95,37 @@ public:
 	virtual ~AreaStore()
 	{}
 
+	AreaStore() :
+	m_res_cache(1000, &cacheMiss, this),
+	cache_enabled(false),
+	m_cacheblock_radius(64),
+	{
+		cache_enabled = false;
+		m_cacheblock_radius = 64;
+	}
+
+	void setCacheEnabled(bool enabled);
+
 	u32 getFreeId(v3s16 minedge, v3s16 maxedge);
 	const Area *getArea(u32 id) const;
 	u16 size() const;
 	bool deserialize(std::istream &is);
 	void serialize(std::ostream &is) const;
+private:
+	static void cacheMiss(void *data, const K &val, V *dest);
+	u8 m_cacheblock_radius; // if you modify this, call invalidateCache()
+	LRUCache<v3s16, std::vector<Area *>> m_res_cache;
+
 };
 
 
 class VectorAreaStore : public AreaStore {
+protected:
+	virtual void getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos);
 public:
 	virtual void insertArea(const Area &a);
 	virtual void reserve(size_t count);
 	virtual bool removeArea(u32 id);
-	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;
@@ -120,11 +138,12 @@ private:
 //#define SPATIAL_DLEN sizeof(u32)
 
 class SpatialAreaStore : public AreaStore {
+protected:
+	virtual void getAreasForPosImpl(std::vector<Area *> *result, v3s16 pos);
 public:
 	SpatialAreaStore();
 	virtual void insertArea(const Area &a);
 	virtual bool removeArea(u32 id);
-	virtual void getAreasForPos(std::vector<Area *> *result, v3s16 pos);
 	virtual void getAreasInArea(std::vector<Area *> *result,
 		v3s16 minedge, v3s16 maxedge, bool accept_overlap);
 	virtual bool forEach(bool (*callback)(void *args, Area *a), void *args) const;

@@ -309,5 +309,66 @@ protected:
 	JSemaphore m_size;
 };
 
+template<typename K, typename V>
+class LRUCache
+{
+public:
+	LRUCache(size_t limit, void (*cache_miss)(void *data, const K &key, V *dest),
+			void *data)
+	{
+		m_limit = limit;
+		m_cache_miss = cache_miss;
+		m_cache_miss_data = data;
+	}
+
+	void invalidate()
+	{
+		m_map.clear();
+		m_queue.clear();
+	}
+
+	const *V lookupCache(const K &key)
+	{
+		cache_type::iterator it = m_map.find(key);
+		V &ret;
+		if (it != m_map.end()) {
+			// found!
+
+			std::pair<std::list<K>::iterator, V> &entry = it->second;
+
+			ret = entry.second;
+
+			// update the usage information
+			m_queue.erase(entry.first);
+			m_queue.push_front(key);
+
+		} else {
+			// cache miss -- enter into cache
+			std::pair<std::list<K>::iterator, V> &entry =
+				m_map[key];
+			ret = entry.second;
+			m_cache_miss(m_cache_miss_data, key, &entry.second);
+
+			// delete old entries
+			if (m_queue.size() == m_limit) {
+				const K &id = m_queue.back();
+				m_map.erase(id);
+				m_queue.pop_back();
+			}
+
+			entry.first = m_queue.begin();
+			m_queue.push_front(key);
+		}
+		return ret;
+	}
+private:
+	void (*m_cache_miss)(void *data, const K &key, V *dest);
+	void *m_cache_miss_data;
+	size_t m_limit;
+	typedef std::map<K, std::pair<std::list<K>::iterator, V> > cache_type;
+	cache_type m_map;
+	std::list<K> m_queue;
+};
+
 #endif
 
