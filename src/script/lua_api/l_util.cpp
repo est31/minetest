@@ -394,7 +394,7 @@ int ModApiUtil::l_get_areastore_typenames(lua_State *L)
 	size_t siz = type_names.size();
 	for (size_t i = 0; i < siz; i++) {
 		lua_newtable(L);
-		lua_pushstring(L, type_names[i]);
+		lua_pushstring(L, type_names[i].c_str());
 		lua_pushboolean(L, true);
 		lua_settable(L,-3);
 	}
