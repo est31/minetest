@@ -1730,6 +1730,7 @@ Helper functions
       * nil: return all entries,
       * true: return only subdirectory names, or
       * false: return only file names.
+* `minetest.get_areastore_typenames()`: returns a `areastore_typename -> true` list of possible AreaStore implementations. The mapped value may change in the future to some non-false (and non-nil) value.
 
 ### Logging
 * `minetest.debug(line)`
@@ -2593,7 +2594,7 @@ An `InvRef` is a reference to an inventory.
 ### `AreaStore`
 A fast access data structure to store areas, and find areas near a given position or area.
 Every area has a `data` string attribute to store additional information.
-
+You can create an empty `AreaStore` by calling `AreaStore()`, or `AreaStore(type_name)`
 #### Methods
 * `get_area(id, borders, data)`: returns the area with the id `id`. (optional) Boolean values `borders` and `data` control what's copied.
 * `get_areas_for_pos(pos, borders, data)`: returns all areas that contain the position `pos`. (optional) Boolean values `borders` and `data` control what's copied.

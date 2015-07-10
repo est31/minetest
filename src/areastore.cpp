@@ -46,6 +46,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, Y) &&  \
 	AST_OVERLAPS_IN_DIMENSION(amine, amaxe, b, Z))
 
+std::vector<std::string> get_areastore_typenames()
+{
+	std::vector<std::string> res;
+	res.push_back("Vector");
+#if USE_SPATIAL
+	res.push_back("LibSpatial");
+#endif
+	return res;
+}
 
 u16 AreaStore::size() const
 {

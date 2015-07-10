@@ -74,6 +74,8 @@ typedef struct Area {
 	u16 datalen;
 } Area;
 
+std::vector<std::string> get_areastore_typenames();
+
 class AreaStore {
 protected:
 	// TODO change to unordered_map when we can

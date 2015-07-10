@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "serialization.h"
 #include "json/json.h"
 #include "cpp_api/s_security.h"
+#include "areastore.h"
 #include "debug.h"
 #include "porting.h"
 #include "log.h"
@@ -386,6 +387,20 @@ int ModApiUtil::l_request_insecure_environment(lua_State *L)
 	return 1;
 }
 
+int ModApiUtil::l_get_areastore_typenames(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	std::vector<std::string> type_names = get_areastore_typenames();
+	size_t siz = type_names.size();
+	for (size_t i = 0; i < siz; i++) {
+		lua_newtable(L);
+		lua_pushstring(L, type_names[i]);
+		lua_pushboolean(L, true);
+		lua_settable(L,-3);
+	}
+	return 1;
+}
+
 
 void ModApiUtil::Initialize(lua_State *L, int top)
 {
@@ -417,6 +432,8 @@ void ModApiUtil::Initialize(lua_State *L, int top)
 	API_FCT(get_dir_list);
 
 	API_FCT(request_insecure_environment);
+
+	API_FCT(get_areastore_typenames);
 }
 
 void ModApiUtil::InitializeAsync(AsyncEngine& engine)

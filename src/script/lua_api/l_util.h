@@ -96,6 +96,9 @@ private:
 	// request_insecure_environment()
 	static int l_request_insecure_environment(lua_State *L);
 
+	// get_areastore_typenames()
+	static int l_get_areastore_typenames(lua_State *L);
+
 public:
 	static void Initialize(lua_State *L, int top);
 

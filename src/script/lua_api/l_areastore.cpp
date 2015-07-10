@@ -325,13 +325,12 @@ LuaAreaStore::LuaAreaStore()
 
 LuaAreaStore::LuaAreaStore(const std::string &type)
 {
-	if (type == "Octree") {
-		//this->as = new OctreeAreaStore();
 #if USE_SPATIAL
-	} else if (type == "LibSpatial") {
+	if (type == "LibSpatial") {
 		this->as = new SpatialAreaStore();
+	} else
 #endif
-	} else {
+	{
 		this->as = new VectorAreaStore();
 	}
 }
