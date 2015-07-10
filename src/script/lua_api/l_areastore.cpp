@@ -252,7 +252,7 @@ int LuaAreaStore::l_set_cache_params(lua_State *L)
 	return 0;
 }
 
-// to_string()
+/* // to_string()
 int LuaAreaStore::l_to_string(lua_State *L)
 {
 	LuaAreaStore *o = checkobject(L, 1);
@@ -312,7 +312,7 @@ int LuaAreaStore::l_from_file(lua_State *L)
 
 	lua_pushboolean(L, success);
 	return 1;
-}
+} */
 
 LuaAreaStore::LuaAreaStore()
 {
@@ -406,9 +406,9 @@ const luaL_reg LuaAreaStore::methods[] = {
 	luamethod(LuaAreaStore, reserve),
 	luamethod(LuaAreaStore, remove_area),
 	luamethod(LuaAreaStore, set_cache_params),
-	luamethod(LuaAreaStore, to_string),
+	/* luamethod(LuaAreaStore, to_string),
 	luamethod(LuaAreaStore, to_file),
 	luamethod(LuaAreaStore, from_string),
-	luamethod(LuaAreaStore, from_file),
+	luamethod(LuaAreaStore, from_file),*/
 	{0,0}
 };

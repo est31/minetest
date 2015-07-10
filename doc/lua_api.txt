@@ -2620,10 +2620,6 @@ You can create an empty `AreaStore` by calling `AreaStore()`, or `AreaStore(type
         block_radius = number, -- the radius of the blocks the cache generates prefiltered lists for, minimum 16, default 64
         limit = number, -- the cache's size, minimum 20, default 1000
       }
-* `to_string()`: serializes the AreaStore to a string
-* `to_file(filename)`: serializes the AreaStore to a file
-* `from_string(str)`: deserializes the given string `str`, and load its areas into the AreaStore
-* `from_file(filename)`: load the areas from the given file into the AreaStore
 
 ### `ItemStack`
 An `ItemStack` is a stack of items.
