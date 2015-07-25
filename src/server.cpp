@@ -148,7 +148,8 @@ Server::Server(
 		const std::string &path_world,
 		const SubgameSpec &gamespec,
 		bool simple_singleplayer_mode,
-		bool ipv6
+		bool ipv6,
+		ChatInterface *iface
 	):
 	m_path_world(path_world),
 	m_gamespec(gamespec),
@@ -175,6 +176,7 @@ Server::Server(
 	m_clients(&m_con),
 	m_shutdown_requested(false),
 	m_shutdown_ask_reconnect(false),
+	m_admin_chat(iface),
 	m_ignore_map_edit_events(false),
 	m_ignore_map_edit_events_peer_id(0),
 	m_next_sound_id(0)
@@ -590,6 +592,22 @@ void Server::AsyncRunStep(bool initial_step)
 		m_env->getMap().timerUpdate(map_timer_and_unload_dtime,
 			g_settings->getFloat("server_unload_unused_data_timeout"),
 			U32_MAX);
+	}
+
+	/*
+		Listen to the admin chat, if available
+	*/
+	if (m_admin_chat) {
+		while (!m_admin_chat->command_queue.empty()) {
+			ChatEvent evt = m_admin_chat->command_queue.pop_frontNoEx();
+			if (evt.type == CET_NICK_ADD) {
+				// The terminal informed us of its nick choice
+				m_admin_nick = evt.nick;
+			} else {
+				assert(evt.type == CET_CHAT);
+				handleAdminChat(evt);
+			}
+		}
 	}
 
 	/*
@@ -1117,16 +1135,19 @@ PlayerSAO* Server::StageTwoClientInit(u16 peer_id)
 
 		// Send information about joining in chat
 		{
-			std::wstring name = L"unknown";
+			std::string name = "unknown";
 			Player *player = m_env->getPlayer(peer_id);
 			if(player != NULL)
-				name = narrow_to_wide(player->getName());
+				name = player->getName();
 
 			std::wstring message;
 			message += L"*** ";
-			message += name;
+			message += narrow_to_wide(name);
 			message += L" joined the game.";
 			SendChatMessage(PEER_ID_INEXISTENT,message);
+			if (m_admin_chat)
+				m_admin_chat->outgoing_queue.push_back(
+					ChatEvent(CET_NICK_ADD, name, L""));
 		}
 	}
 	Address addr = getPeerAddress(player->peer_id);
@@ -2682,9 +2703,13 @@ void Server::DeleteClient(u16 peer_id, ClientDeletionReason reason)
 					os << player->getName() << " ";
 				}
 
-				actionstream << player->getName() << " "
+				std::string name = player->getName();
+				actionstream << name << " "
 						<< (reason == CDR_TIMEOUT ? "times out." : "leaves game.")
 						<< " List of players: " << os.str() << std::endl;
+				if (m_admin_chat)
+					m_admin_chat->outgoing_queue.push_back(
+						ChatEvent(CET_NICK_REMOVE, name, L""));
 			}
 		}
 		{
@@ -2715,6 +2740,62 @@ void Server::UpdateCrafting(Player* player)
 	sanity_check(plist);
 	sanity_check(plist->getSize() >= 1);
 	plist->changeItem(0, preview);
+}
+
+void Server::handleAdminChat(const ChatEvent &evt)
+{
+	std::string name = evt.nick;
+	std::wstring wname = utf8_to_wide(name);
+	std::wstring message = evt.chat_msg;
+
+	// Run script hook
+	bool ate = m_script->on_chat_message(name,
+			wide_to_utf8(message));
+	// If script ate the message, don't proceed
+	if (ate)
+		return;
+
+	// Line to send to players
+	std::wstring line;
+	// Whether to send to the player that sent the line
+	bool send_to_sender_only = false;
+
+	// Commands are implemented in Lua, so only catch invalid
+	// commands that were not "eaten" and send an error back
+	if (message[0] == L'/') {
+		message = message.substr(1);
+		send_to_sender_only = true;
+		if (message.length() == 0)
+			line += L"-!- Empty command";
+		else
+			line += L"-!- Invalid command: " + str_split(message, L' ')[0];
+	} else {
+		line += L"<";
+		line += wname;
+		line += L"> ";
+		line += message;
+	}
+
+	if (line != L"") {
+		/*
+			Send the message to sender
+		*/
+		if (send_to_sender_only) {
+			m_admin_chat->outgoing_queue.push_back(ChatEvent(CET_CHAT, "", line));
+		} else {
+			/*
+				Send the message to others
+			*/
+			actionstream << "CHAT: " << wide_to_narrow(line) << std::endl;
+
+			std::vector<u16> clients = m_clients.getClientIDs();
+
+			for (std::vector<u16>::iterator i = clients.begin();
+				i != clients.end(); ++i) {
+					SendChatMessage(*i, line);
+			}
+		}
+	}
 }
 
 RemoteClient* Server::getClient(u16 peer_id, ClientState state_min)
@@ -2849,8 +2930,12 @@ void Server::notifyPlayer(const char *name, const std::wstring &msg)
 		return;
 
 	Player *player = m_env->getPlayer(name);
-	if (!player)
+	if (!player) {
+		if (m_admin_nick == name && !m_admin_nick.empty()) {
+			m_admin_chat->outgoing_queue.push_back(ChatEvent(CET_CHAT, "", msg));
+		}
 		return;
+	}
 
 	if (player->peer_id == PEER_ID_INEXISTENT)
 		return;

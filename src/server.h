@@ -20,6 +20,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef SERVER_HEADER
 #define SERVER_HEADER
 
+#include "chat_interface.h"
 #include "network/connection.h"
 #include "irr_v3d.h"
 #include "map.h"
@@ -32,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "util/numeric.h"
 #include "util/thread.h"
 #include "environment.h"
+#include "chat_interface.h"
 #include "clientiface.h"
 #include "network/networkpacket.h"
 #include <string>
@@ -171,7 +173,8 @@ public:
 		const std::string &path_world,
 		const SubgameSpec &gamespec,
 		bool simple_singleplayer_mode,
-		bool ipv6
+		bool ipv6,
+		ChatInterface *iface = NULL
 	);
 	~Server();
 	void start(Address bind_addr);
@@ -467,6 +470,7 @@ private:
 	void RespawnPlayer(u16 peer_id);
 	void DeleteClient(u16 peer_id, ClientDeletionReason reason);
 	void UpdateCrafting(Player *player);
+	void handleAdminChat(const ChatEvent &evt);
 
 	v3f findSpawnPos();
 
@@ -593,6 +597,9 @@ private:
 	bool m_shutdown_requested;
 	std::string m_shutdown_msg;
 	bool m_shutdown_ask_reconnect;
+
+	ChatInterface *m_admin_chat;
+	std::string m_admin_nick;
 
 	/*
 		Map edit event queue. Automatically receives all map edits.

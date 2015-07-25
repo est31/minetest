@@ -33,7 +33,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define TOSTRING(x) STRINGIFY(x)
 
 // Checks whether a byte is an inner byte for an utf-8 multibyte sequence
-#define IS_UTF8_MULTB_INNER(x) (((unsigned char)x >= 0x80) && ((unsigned char)x < 0xc0))
+#define IS_UTF8_MULTB_INNER(x) (((unsigned char)(x) >= 0x80) && ((unsigned char)(x) < 0xc0))
+#define IS_UTF8_MULTB_START(x) (((unsigned char)(x) >= 0x80) \
+	&& ((unsigned char)(x) >= 0xc2)                          \
+	&& ((unsigned char)(x) < 0xf5))
+#define UTF8_MULTB_START_LEN(x) (((unsigned char)(x) < 0xe0) ? 2 : \
+	(((unsigned char)(x) < 0xf0) ? 3 : 4))
 
 typedef std::map<std::string, std::string> StringMap;
 

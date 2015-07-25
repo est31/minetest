@@ -7,6 +7,7 @@
 
 -- Initialize some very basic things
 function core.debug(...) core.log(table.concat({...}, "\t")) end
+print = core.debug -- Override native print and use our logging system
 math.randomseed(os.time())
 os.setlocale("C", "numeric")
 minetest = core

@@ -45,10 +45,15 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "httpfetch.h"
 #include "guiEngine.h"
 #include "map.h"
+#include "player.h"
 #include "mapsector.h"
 #include "fontengine.h"
 #include "gameparams.h"
 #include "database.h"
+#include "cmake_config.h"
+#if USE_CURSES
+	#include "terminal_chat_console.h"
+#endif
 #ifndef SERVER
 #include "client/clientlauncher.h"
 #endif
@@ -278,6 +283,8 @@ static void set_allowed_options(OptionList *allowed_options)
 			_("Set gameid (\"--gameid list\" prints available ones)"))));
 	allowed_options->insert(std::make_pair("migrate", ValueSpec(VALUETYPE_STRING,
 			_("Migrate from current map backend to another (Only works when using minetestserver or with --server)"))));
+	allowed_options->insert(std::make_pair("terminal", ValueSpec(VALUETYPE_FLAG,
+			_("Feature an interactive terminal (Only works when using minetestserver or with --server)"))));
 #ifndef SERVER
 	allowed_options->insert(std::make_pair("videomodes", ValueSpec(VALUETYPE_FLAG,
 			_("Show available video modes"))));
@@ -817,14 +824,58 @@ static bool run_dedicated_server(const GameParams &game_params, const Settings &
 	if (cmd_args.exists("migrate"))
 		return migrate_database(game_params, cmd_args);
 
-	// Create server
-	Server server(game_params.world_path, game_params.game_spec, false,
-		bind_addr.isIPv6());
-	server.start(bind_addr);
+	if (cmd_args.exists("terminal")) {
+#if USE_CURSES
+		bool name_ok = true;
+		std::string admin_nick = g_settings->get("name");
 
-	// Run server
-	bool &kill = *porting::signal_handler_killstatus();
-	dedicated_server_loop(server, kill);
+		name_ok = name_ok && !admin_nick.empty();
+		name_ok = name_ok && string_allowed(admin_nick, PLAYERNAME_ALLOWED_CHARS);
+
+		if (!name_ok) {
+			errorstream << "No valid name given for admin. "
+				<< "Please check your minetest.conf that it "
+				<< "contains a 'name = ' to your main admin account."
+				<< std::endl;
+			return false;
+		}
+		ChatInterface iface;
+		bool &kill = *porting::signal_handler_killstatus();
+
+		// Create server
+		Server server(game_params.world_path,
+			game_params.game_spec, false, bind_addr.isIPv6(), &iface);
+
+		// Make the loggers to stdout/stderr shut up
+		g_logger.removeOutput(&stderr_output);
+		g_logger.removeOutput(&stdout_output);
+
+		TerminalChatConsole console(&iface, g_logger, kill, admin_nick);
+
+		server.start(bind_addr);
+		// Run server
+		dedicated_server_loop(server, kill);
+
+		// Tell the console to stop, and wait for it to finish,
+		// only then leave context and free iface
+		console.stop();
+		console.wait();
+	} else {
+#else
+		errorstream << "Cmd arg --terminal passed, but "
+			<< "compiled without ncurses. Ignoring." << std::endl;
+	} {
+#endif
+		// Create server
+		Server server(game_params.world_path, game_params.game_spec, false,
+			bind_addr.isIPv6());
+
+		server.start(bind_addr);
+
+		// Run server
+		bool &kill = *porting::signal_handler_killstatus();
+		dedicated_server_loop(server, kill);
+	}
 
 	return true;
 }
