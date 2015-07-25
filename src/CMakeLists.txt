@@ -160,6 +160,21 @@ find_package(Lua REQUIRED)
 
 find_package(GMP REQUIRED)
 
+option(ENABLE_NCURSES "Enable ncurses console" TRUE)
+set(USE_CURSES FALSE)
+
+if(ENABLE_NCURSES)
+	find_library(NCURSES_LIBRARY ncursesw)
+	find_path(NCURSES_INCLUDE_DIR ncursesw/curses.h)
+	if(NCURSES_LIBRARY AND NCURSES_INCLUDE_DIR)
+		set(USE_CURSES TRUE)
+		message(STATUS "ncurses console enabled.")
+		include_directories(${NCURSES_INCLUDE_DIR})
+	else()
+		message(STATUS "ncurses not found!")
+	endif()
+endif(ENABLE_NCURSES)
+
 option(ENABLE_LEVELDB "Enable LevelDB backend" TRUE)
 set(USE_LEVELDB FALSE)
 
@@ -322,6 +337,7 @@ set(common_SRCS
 	areastore.cpp
 	ban.cpp
 	cavegen.cpp
+	chat.cpp
 	clientiface.cpp
 	collision.cpp
 	content_abm.cpp
@@ -386,6 +402,7 @@ set(common_SRCS
 	sound.cpp
 	staticobject.cpp
 	subgame.cpp
+	terminal_chat_console.cpp
 	tool.cpp
 	treegen.cpp
 	version.cpp
@@ -430,7 +447,6 @@ set(client_SRCS
 	${sound_SRCS}
 	${client_network_SRCS}
 	camera.cpp
-	chat.cpp
 	client.cpp
 	clientmap.cpp
 	clientmedia.cpp
@@ -557,6 +573,9 @@ if(BUILD_CLIENT)
 			${CGUITTFONT_LIBRARY}
 		)
 	endif()
+	if (USE_CURSES)
+		target_link_libraries(${PROJECT_NAME} ${NCURSES_LIBRARY})
+	endif()
 	if (USE_LEVELDB)
 		target_link_libraries(${PROJECT_NAME} ${LEVELDB_LIBRARY})
 	endif()
@@ -584,6 +603,9 @@ if(BUILD_SERVER)
 	)
 	set_target_properties(${PROJECT_NAME}server PROPERTIES
 			COMPILE_DEFINITIONS "SERVER")
+	if (USE_CURSES)
+		target_link_libraries(${PROJECT_NAME}server ${NCURSES_LIBRARY})
+	endif()
 	if (USE_LEVELDB)
 		target_link_libraries(${PROJECT_NAME}server ${LEVELDB_LIBRARY})
 	endif()
