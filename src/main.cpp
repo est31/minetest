@@ -46,6 +46,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "guiEngine.h"
 #include "map.h"
 #include "mapsector.h"
+#include "util/hex.h"
 #include "fontengine.h"
 #include "gameparams.h"
 #include "database.h"
@@ -202,6 +203,9 @@ int main(int argc, char *argv[])
 	if (!init_common(&game_params.log_level, cmd_args, argc, argv))
 		return 1;
 
+	errorstream << "TESTING UTF TRANSCODING FUNCTIONS...." << std::endl;
+	errorstream << hex_encode(wide_to_utf8(utf8_to_wide("hello"))) << std::endl;
+	errorstream << hex_encode(wide_to_narrow(utf8_to_wide("hello"))) << std::endl;
 #ifndef __ANDROID__
 	// Run unit tests
 	if (cmd_args.getFlag("run-unittests")) {
