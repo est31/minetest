@@ -3381,6 +3381,29 @@ PlayerSAO* Server::emergePlayer(const char *name, u16 peer_id)
 		m_script->on_newplayer(playersao);
 	}
 
+	ServerMap &map = m_env->getServerMap();
+	u32 time_spent;
+	u16 size;
+
+	u16 z_max = 1;
+	u16 blockr = 8;
+
+	size = 0;
+	for (u16 z = 0; z < z_max; z++) {
+		u32 cur_t;
+		size += map.getBlockCompositeSize(v3s16(0,-16,z*blockr), peer_id, blockr, true, cur_t);
+		time_spent += cur_t;
+	}
+	errorstream << "VP9 LOSSLESS: " << size << " SPENT " << time_spent << std::endl;
+	time_spent = 0;
+	size = 0;
+	for (u16 z = 0; z < z_max; z++) {
+		u32 cur_t;
+		size += map.getBlockCompositeSize(v3s16(0,-8,z*blockr), peer_id, blockr, false, cur_t);
+		time_spent += cur_t;
+	}
+	errorstream << "DEFLATE: " << size << " SPENT " << time_spent << std::endl;
+
 	return playersao;
 }
 

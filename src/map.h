@@ -486,6 +486,7 @@ public:
 
 	bool saveBlock(MapBlock *block);
 	static bool saveBlock(MapBlock *block, Database *db);
+	size_t getBlockCompositeSize(v3s16 startblock, u16 peer_id, u32 blockr, bool vpx, u32 &us_spent);
 	// This will generate a sector with getSector if not found.
 	void loadBlock(std::string sectordir, std::string blockfile, MapSector *sector, bool save_after_load=false);
 	MapBlock* loadBlock(v3s16 p);

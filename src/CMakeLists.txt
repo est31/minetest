@@ -177,6 +177,23 @@ if(ENABLE_REDIS)
 endif(ENABLE_REDIS)
 
 
+OPTION(ENABLE_VPX "Enable VP9 compression" FALSE)
+set(USE_VPX FALSE)
+
+if(ENABLE_VPX)
+	find_library(VPX_LIBRARY vpx)
+	find_path(VPX_INCLUDE_DIR vpx_decoder.h PATH_SUFFIXES vpx)
+	if(VPX_LIBRARY AND VPX_INCLUDE_DIR)
+		set(USE_VPX TRUE)
+		message(STATUS "VP9 compression enabled.")
+		#include_directories(${VPX_INCLUDE_DIR})
+		include_directories(~/src/libvpx)
+	else()
+		message(STATUS "vpx not found!")
+	endif()
+endif()
+
+
 find_package(SQLite3 REQUIRED)
 find_package(Json REQUIRED)
 
@@ -522,6 +539,10 @@ if(BUILD_CLIENT)
 	endif()
 	if (USE_REDIS)
 		target_link_libraries(${PROJECT_NAME} ${REDIS_LIBRARY})
+	endif()
+	if (USE_VPX)
+		target_link_libraries(${PROJECT_NAME} ~/src/libvpx/libvpx.a)
+		#target_link_libraries(${PROJECT_NAME} ${VPX_LIBRARY})
 	endif()
 endif(BUILD_CLIENT)
 

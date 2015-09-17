@@ -553,7 +553,7 @@ static void correctBlockNodeIds(const NameIdMapping *nimap, MapNode *nodes,
 	}
 }
 
-void MapBlock::serialize(std::ostream &os, u8 version, bool disk)
+void MapBlock::serialize(std::ostream &os, u8 version, bool disk, MapNode *vpx_layer)
 {
 	if(!ser_ver_supported(version))
 		throw VersionMismatchException("ERROR: MapBlock format not supported");
@@ -583,7 +583,7 @@ void MapBlock::serialize(std::ostream &os, u8 version, bool disk)
 	NameIdMapping nimap;
 	if(disk)
 	{
-		MapNode *tmp_nodes = new MapNode[nodecount];
+		MapNode *tmp_nodes = vpx_layer ? vpx_layer : new MapNode[nodecount];
 		for(u32 i=0; i<nodecount; i++)
 			tmp_nodes[i] = data[i];
 		getBlockNodeIdMapping(&nimap, tmp_nodes, m_gamedef->ndef());
@@ -592,9 +592,11 @@ void MapBlock::serialize(std::ostream &os, u8 version, bool disk)
 		u8 params_width = 2;
 		writeU8(os, content_width);
 		writeU8(os, params_width);
-		MapNode::serializeBulk(os, version, tmp_nodes, nodecount,
+		if (!vpx_layer) {
+			MapNode::serializeBulk(os, version, tmp_nodes, nodecount,
 				content_width, params_width, true);
-		delete[] tmp_nodes;
+			delete[] tmp_nodes;
+		}
 	}
 	else
 	{
@@ -638,6 +640,16 @@ void MapBlock::serialize(std::ostream &os, u8 version, bool disk)
 		}
 	}
 }
+
+/*size_t MapBlock::getserializedSize(u8 version, bool disk, bool vpx)
+{
+	std::ostringstream o(std::ios_base::binary);
+	o.write((char*) &version, 1);
+	block->serialize(o, version, disk, vpx);
+
+	std::string data = o.str();
+	return data.size();
+}*/
 
 void MapBlock::serializeNetworkSpecific(std::ostream &os, u16 net_proto_version)
 {

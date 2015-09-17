@@ -49,6 +49,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #if USE_REDIS
 #include "database-redis.h"
 #endif
+#if USE_VPX
+#include "vpx/vpx_encoder.h"
+#include "vpx/vpx_image.h"
+#include "vpx/vp8cx.h"
+//#include "vpx/video_common.h"
+#endif
 
 #define PP(x) "("<<(x).X<<","<<(x).Y<<","<<(x).Z<<")"
 
@@ -3327,6 +3333,222 @@ bool ServerMap::saveBlock(MapBlock *block, Database *db)
 		block->resetModified();
 	}
 	return ret;
+}
+
+int vpx_img_plane_width(const vpx_image_t *img, int plane) {
+  if (plane > 0 && img->x_chroma_shift > 0)
+    return (img->d_w + 1) >> img->x_chroma_shift;
+  else
+    return img->d_w;
+}
+
+static int vpx_img_plane_height(const vpx_image_t *img, int plane) {
+  if (plane > 0 &&  img->y_chroma_shift > 0)
+    return (img->d_h + 1) >> img->y_chroma_shift;
+  else
+    return img->d_h;
+}
+
+typedef struct {
+  uint32_t codec_fourcc;
+  int frame_width;
+  int frame_height;
+  //struct VpxRational time_base;
+} VpxVideoInfo;
+
+static int encode_frame(vpx_codec_ctx_t *codec,
+	vpx_image_t *img, int frame_index,
+	int flags, std::ostream &os) {
+	int got_pkts = 0;
+	vpx_codec_iter_t iter = NULL;
+	const vpx_codec_cx_pkt_t *pkt = NULL;
+	const vpx_codec_err_t res = vpx_codec_encode(codec, img, frame_index, 1,
+		flags, VPX_DL_GOOD_QUALITY);
+	if (res != VPX_CODEC_OK)
+		return 0;
+
+	while ((pkt = vpx_codec_get_cx_data(codec, &iter)) != NULL) {
+		got_pkts = 1;
+
+		if (pkt->kind == VPX_CODEC_CX_FRAME_PKT) {
+			//const int keyframe = (pkt->data.frame.flags & VPX_FRAME_IS_KEY) != 0;
+			//TODO: write size too
+			//TODO write pkt->data.frame.pts too
+			os.write( (char*) pkt->data.frame.buf, pkt->data.frame.sz);
+			// was vpx_video_writer_write_frame(writer, ...)
+			//printf(keyframe ? "K" : ".");
+			fflush(stdout);
+		}
+	}
+
+	return got_pkts;
+}
+
+size_t ServerMap::getBlockCompositeSize(v3s16 startblock, u16 peer_id, u32 blockr, bool vpx, u32 &us_spent)
+{
+	// Format used for writing
+	u8 version = SER_FMT_VER_HIGHEST_WRITE;
+	/*
+		[0] u8 serialization version
+		[1] data
+	*/
+	std::ostringstream o(std::ios_base::binary);
+	o.write((char*) &version, 1);
+
+	v3s16 endblock = startblock + v3s16(blockr, blockr, blockr);
+
+	u32 time_spent = 0;
+	u32 start_ctr = 0;
+
+	if (vpx) {
+
+		u32 mblock_nodes = MAP_BLOCKSIZE * MAP_BLOCKSIZE * MAP_BLOCKSIZE;
+		u32 nodecount = mblock_nodes * blockr * blockr * blockr;
+		u32 ystride = MAP_BLOCKSIZE * blockr;
+		u32 zstride = MAP_BLOCKSIZE * blockr * MAP_BLOCKSIZE * blockr;
+
+		MapNode *nodes_buf = new MapNode[nodecount];
+
+		vpx_codec_ctx_t codec;
+		vpx_codec_enc_cfg_t cfg;
+		int frame_count = 0;
+		vpx_image_t raw;
+		vpx_codec_err_t res;
+		VpxVideoInfo info = {0};
+		const int fps = 30;
+
+		//if (argc < 5)
+		//	die("Invalid number of arguments");
+
+		vpx_codec_iface_t *(*const codec_interface)() = &vpx_codec_vp9_cx;
+
+		//info.codec_fourcc = VP9_FOURCC;
+		info.frame_width = blockr * MAP_BLOCKSIZE;
+		info.frame_height = blockr * MAP_BLOCKSIZE;
+
+		if (info.frame_width <= 0 ||
+			info.frame_height <= 0 ||
+			(info.frame_width % 2) != 0 ||
+			(info.frame_height % 2) != 0) {
+			errorstream << "Invalid frame size: " << info.frame_width
+				<< "x" << info.frame_height << std::endl;
+			return 0;
+		}
+
+		if (!vpx_img_alloc(&raw, VPX_IMG_FMT_RGB565, info.frame_width,
+				info.frame_height, 1)) {
+			errorstream << "Failed to allocate image." << std::endl;
+			return 0;
+		}
+
+		errorstream << "Using " << vpx_codec_iface_name(codec_interface()) << std::endl;
+
+		res = vpx_codec_enc_config_default(codec_interface(), &cfg, 0);
+		if (res) {
+			errorstream << "Failed to get default codec config." << std::endl;
+			return 0;
+		}
+
+		cfg.g_w = info.frame_width;
+		cfg.g_h = info.frame_height;
+		cfg.g_timebase.num = 1;
+		cfg.g_timebase.den = fps;
+
+		if (vpx_codec_enc_init(&codec, codec_interface(), &cfg, 0)) {
+			errorstream << "Failed to initialize encoder" << std::endl;
+			return 0;
+		}
+
+		res = vpx_codec_control_(&codec, VP9E_SET_LOSSLESS, 1);
+		if (res) {
+			errorstream << "Failed to use lossless mode: " << res << std::endl;
+			return 0;
+		}
+		u16 bct = 0;
+		for (s16 xb = 0; xb < blockr; xb++)
+		for (s16 yb = 0; yb < blockr; yb++)
+		for (s16 zb = 0; zb < blockr; zb++) {
+			v3s16 curpos = v3s16(startblock.X + xb, startblock.Y + yb,
+				startblock.Z + zb);
+			MapBlock* curblock = emergeBlock(curpos, false);
+			if (curblock) {
+				bct++;
+				MapNode *tmp_nodes = new MapNode[mblock_nodes];
+				curblock->serialize(o, version, true, tmp_nodes);
+				// add tmp_nodes to nodes_buf
+				for (int x = 0; x < MAP_BLOCKSIZE; x++)
+				for (int y = 0; y < MAP_BLOCKSIZE; y++)
+				for (int z = 0; z < MAP_BLOCKSIZE; z++) {
+					MapNode vn = tmp_nodes[
+							x + y * MapBlock::ystride + z * MapBlock::zstride];
+					nodes_buf[(xb * MAP_BLOCKSIZE) + x
+						+ ystride * ((yb * MAP_BLOCKSIZE) + y)
+						+ zstride * ((zb * MAP_BLOCKSIZE) + z)] = vn;
+				}
+				delete [] tmp_nodes;
+			}
+		}
+		errorstream << "block count: " << bct << " of " << blockr * blockr * blockr << std::endl;
+		start_ctr = porting::getTimeUs();
+		MapNode *nodes_ptr = nodes_buf;
+		// Encode frames.
+		for (u16 z = 0; z < MAP_BLOCKSIZE * blockr; z++) {
+
+			int plane = VPX_PLANE_PACKED;
+			unsigned char *buf = raw.planes[plane];
+			const int stride = raw.stride[plane];
+			const int w = vpx_img_plane_width(&raw, plane)
+				* (/*(raw.fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 2 :*/ 1);
+			const int h = vpx_img_plane_height(&raw, plane);
+
+			//errorstream << "encoding frame " << z << std::endl;
+			for (int y = 0; y < h; y++) {
+				for (int x = 0; x < w; x++) {
+					u16 po = nodes_ptr[x].param0;
+					buf[x * 2] = 0xff & po;
+					buf[x * 2 + 1] = 0xff & (po >> 8);
+				}
+				buf += stride;
+				nodes_ptr += w;
+			}
+			encode_frame(&codec, &raw, frame_count++, 0, o);
+		}
+		
+		delete [] nodes_buf;
+
+		// Flush encoder.
+		//while (encode_frame(&codec, NULL, -1, 0, o)) {}
+
+		vpx_img_free(&raw);
+		if (vpx_codec_destroy(&codec)) {
+			errorstream << "Failed to destroy codec." << std::endl;
+			return 0;
+		}
+		time_spent += porting::getTimeUs() - start_ctr;
+	} else {
+		u16 misses = 0;
+		u16 bct = 0;
+		for (s16 xb = startblock.X; xb < endblock.X; xb++)
+		for (s16 yb = startblock.Y; yb < endblock.Y; yb++)
+		for (s16 zb = startblock.Z; zb < endblock.Z; zb++) {
+			v3s16 curpos = v3s16(xb, yb, zb);
+			MapBlock* curblock = emergeBlock(curpos, false);
+			if (curblock) {
+				bct++;
+				start_ctr = porting::getTimeUs();
+				curblock->serialize(o, version, true);
+				time_spent += porting::getTimeUs() - start_ctr;
+			} else {
+				//m_emerge->enqueueBlockEmerge(peer_id, curpos, true);
+				//errorstream << "MISS " << misses++
+				//	<< "X: " << curpos.X << "Y: "
+				//	<< curpos.Y << "Z: " <<  curpos.Z << std::endl;
+			}
+		}
+		errorstream << "block count: " << bct << " of " << blockr * blockr * blockr << std::endl;
+	}
+	us_spent = time_spent;
+	return o.str().length();
 }
 
 void ServerMap::loadBlock(std::string sectordir, std::string blockfile,
