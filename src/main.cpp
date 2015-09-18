@@ -54,6 +54,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #if USE_CURSES
 	#include "terminal_chat_console.h"
 #endif
+#include "util/serialize.h"
 #ifndef SERVER
 #include "client/clientlauncher.h"
 #endif
@@ -112,6 +113,7 @@ static bool determine_subgame(GameParams *game_params);
 
 static bool run_dedicated_server(const GameParams &game_params, const Settings &cmd_args);
 static bool migrate_database(const GameParams &game_params, const Settings &cmd_args);
+static bool world_stats(const GameParams &game_params, const Settings &cmd_args);
 
 /**********************************************************************/
 
@@ -297,6 +299,8 @@ static void set_allowed_options(OptionList *allowed_options)
 			_("Migrate from current map backend to another (Only works when using minetestserver or with --server)"))));
 	allowed_options->insert(std::make_pair("terminal", ValueSpec(VALUETYPE_FLAG,
 			_("Feature an interactive terminal (Only works when using minetestserver or with --server)"))));
+	allowed_options->insert(std::make_pair("worldstats", ValueSpec(VALUETYPE_FLAG,
+			_("Print some world stats"))));
 #ifndef SERVER
 	allowed_options->insert(std::make_pair("videomodes", ValueSpec(VALUETYPE_FLAG,
 			_("Show available video modes"))));
@@ -830,6 +834,9 @@ static bool run_dedicated_server(const GameParams &game_params, const Settings &
 	if (cmd_args.exists("migrate"))
 		return migrate_database(game_params, cmd_args);
 
+	if (cmd_args.exists("worldstats"))
+		return world_stats(game_params, cmd_args);
+
 	if (cmd_args.exists("terminal")) {
 #if USE_CURSES
 		bool name_ok = true;
@@ -976,3 +983,81 @@ static bool migrate_database(const GameParams &game_params, const Settings &cmd_
 	return true;
 }
 
+static bool world_stats(const GameParams &game_params, const Settings &cmd_args)
+{
+	Settings world_mt;
+	std::string world_mt_path = game_params.world_path + DIR_DELIM + "world.mt";
+	if (!world_mt.readConfigFile(world_mt_path.c_str())) {
+		errorstream << "Cannot read world.mt at '"
+			<< world_mt_path << "' !" << std::endl;
+		return false;
+	}
+	if (!world_mt.exists("backend")) {
+		errorstream << "Please specify your current backend in world.mt:"
+			<< std::endl
+			<< "	backend = {sqlite3|leveldb|redis|dummy}"
+			<< std::endl;
+		return false;
+	}
+	std::string backend = world_mt.get("backend");
+	Database *db = ServerMap::createDatabase(backend, game_params.world_path, world_mt);
+
+	u32 count = 0;
+	u32 valid_count = 0;
+	time_t last_update_time = 0;
+
+	u8 ver_max = 26;// SER_FMT_VER_HIGHEST_READ;
+	u32 *verstat = new u32[ver_max + 1];
+	for (u8 i = 0; i <= ver_max; i++)
+		verstat[i] = 0;
+
+	bool &kill = *porting::signal_handler_killstatus();
+
+	actionstream << "Loading block list..." << std::endl;
+	std::vector<v3s16> blocks;
+	db->listAllLoadableBlocks(blocks);
+	actionstream << "Block list loaded." << std::endl;
+	//new_db->beginSave();
+	for (std::vector<v3s16>::const_iterator it = blocks.begin(); it != blocks.end(); ++it) {
+		if (kill) return false;
+
+		const std::string &data = db->loadBlock(*it);
+		if (!data.empty()) {
+			//new_db->saveBlock(*it, data);
+			valid_count++;
+			u8 ver = readU8((u8 *)data.c_str());
+			if (ver <= ver_max)
+				verstat[ver]++;
+			else
+				errorstream << "Block " << PP(*it) << " has invalid version " << ver << ", skipping it." << std::endl;
+		} else {
+			errorstream << "Failed to load block " << PP(*it) << ", skipping it." << std::endl;
+		}
+		if (++count % 0xFF == 0 && time(NULL) - last_update_time >= 1) {
+			std::cerr << " Scanned " << count << " blocks, "
+				<< (100.0 * count / blocks.size()) << "% completed.\r";
+			//new_db->endSave();
+			//new_db->beginSave();
+			last_update_time = time(NULL);
+		}
+	}
+	std::cerr << std::endl;
+	//new_db->endSave();
+	delete db;
+
+	actionstream << "Blocks scanned successfully." << std::endl;
+	actionstream << "======================" << std::endl;
+	actionstream << "WORLD STATS" << std::endl;
+	actionstream << "Found " << blocks.size() << " blocks, "
+		<< valid_count << " valid ones(" << blocks.size() - valid_count << " invalid)." << std::endl;
+	actionstream << "serialisation version / blocks count "
+		"(versions without blocks omitted):" << std::endl;
+	for (u8 i = 0; i <= ver_max; i++)
+		if (verstat[i] > 0)
+			actionstream << itos(i) << " / " << verstat[i] << std::endl;
+	//"scanned blocks." << count << " blocks" << std::endl;
+
+	delete [] verstat;
+
+	return true;
+}
