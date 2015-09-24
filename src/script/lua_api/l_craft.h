@@ -26,14 +26,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "lua_api/l_base.h"
 
 struct CraftReplacements;
+class IWritableCraftDefManager;
 
 class ModApiCraft : public ModApiBase {
 private:
 	static int l_register_craft(lua_State *L);
+	static int l_register_craft_batched(lua_State *L);
 	static int l_get_craft_recipe(lua_State *L);
 	static int l_get_all_craft_recipes(lua_State *L);
 	static int l_get_craft_result(lua_State *L);
 
+	static void registerCraft(lua_State *L, int index,
+			IWritableCraftDefManager *craftdef);
 	static bool readCraftReplacements(lua_State *L, int index,
 			CraftReplacements &replacements);
 	static bool readCraftRecipeShapeless(lua_State *L, int index,

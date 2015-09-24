@@ -130,18 +130,29 @@ bool ModApiCraft::readCraftReplacements(lua_State *L, int index,
 	}
 	return true;
 }
+
 // register_craft({output=item, recipe={{item00,item10},{item01,item11}})
-int ModApiCraft::l_register_craft(lua_State *L)
+int ModApiCraft::l_register_craft_batched(lua_State *L)
 {
-	NO_MAP_LOCK_REQUIRED;
-	//infostream<<"register_craft"<<std::endl;
 	luaL_checktype(L, 1, LUA_TTABLE);
-	int table = 1;
+	lua_pushnil(L);
 
 	// Get the writable craft definition manager from the server
 	IWritableCraftDefManager *craftdef =
 			getServer(L)->getWritableCraftDefManager();
 
+	while (lua_next(L, 1) != 0) {
+		registerCraft(L, -1, craftdef);
+		lua_settop(L, 2);
+	}
+	lua_pop(L, 1);
+	return 0;
+}
+
+// throws LuaError on error, returns on success
+void ModApiCraft::registerCraft(lua_State *L, int table,
+		IWritableCraftDefManager *craftdef)
+{
 	std::string type = getstringfield_default(L, table, "type", "shaped");
 
 	/*
@@ -276,6 +287,21 @@ int ModApiCraft::l_register_craft(lua_State *L)
 	{
 		throw LuaError("Unknown crafting definition type: \"" + type + "\"");
 	}
+}
+
+// register_craft({output=item, recipe={{item00,item10},{item01,item11}})
+int ModApiCraft::l_register_craft(lua_State *L)
+{
+	NO_MAP_LOCK_REQUIRED;
+	//infostream<<"register_craft"<<std::endl;
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int table = 1;
+
+	// Get the writable craft definition manager from the server
+	IWritableCraftDefManager *craftdef =
+			getServer(L)->getWritableCraftDefManager();
+
+	registerCraft(L, table, craftdef);
 
 	lua_pop(L, 1);
 	return 0; /* number of results */
@@ -431,4 +457,5 @@ void ModApiCraft::Initialize(lua_State *L, int top)
 	API_FCT(get_craft_recipe);
 	API_FCT(get_craft_result);
 	API_FCT(register_craft);
+	API_FCT(register_craft_batched);
 }
