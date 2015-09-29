@@ -59,6 +59,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "client/clientlauncher.h"
 #endif
 
+#include "nameidmapping.h"
+#include "staticobject.h"
+
 #ifdef HAVE_TOUCHSCREENGUI
 	#include "touchscreengui.h"
 #endif
@@ -113,7 +116,7 @@ static bool determine_subgame(GameParams *game_params);
 
 static bool run_dedicated_server(const GameParams &game_params, const Settings &cmd_args);
 static bool migrate_database(const GameParams &game_params, const Settings &cmd_args);
-static bool world_stats(const GameParams &game_params, const Settings &cmd_args);
+static bool fix_entities(const GameParams &game_params, const Settings &cmd_args);
 
 /**********************************************************************/
 
@@ -299,8 +302,8 @@ static void set_allowed_options(OptionList *allowed_options)
 			_("Migrate from current map backend to another (Only works when using minetestserver or with --server)"))));
 	allowed_options->insert(std::make_pair("terminal", ValueSpec(VALUETYPE_FLAG,
 			_("Feature an interactive terminal (Only works when using minetestserver or with --server)"))));
-	allowed_options->insert(std::make_pair("worldstats", ValueSpec(VALUETYPE_FLAG,
-			_("Print some world stats"))));
+	allowed_options->insert(std::make_pair("entities", ValueSpec(VALUETYPE_STRING,
+			_("Either \"fix\"es mapblocks with too much (>U16_MAX) entities, or \"remove\"s all entities"))));
 #ifndef SERVER
 	allowed_options->insert(std::make_pair("videomodes", ValueSpec(VALUETYPE_FLAG,
 			_("Show available video modes"))));
@@ -834,8 +837,8 @@ static bool run_dedicated_server(const GameParams &game_params, const Settings &
 	if (cmd_args.exists("migrate"))
 		return migrate_database(game_params, cmd_args);
 
-	if (cmd_args.exists("worldstats"))
-		return world_stats(game_params, cmd_args);
+	if (cmd_args.exists("entities"))
+		return fix_entities(game_params, cmd_args);
 
 	if (cmd_args.exists("terminal")) {
 #if USE_CURSES
@@ -983,7 +986,151 @@ static bool migrate_database(const GameParams &game_params, const Settings &cmd_
 	return true;
 }
 
-static bool world_stats(const GameParams &game_params, const Settings &cmd_args)
+
+// returns -1 for invalid block, 0 for valid block, 1 for a block with too much entities
+// in the case of return value == 1, we write the new block into blockout, and put more info into err_msg
+static int fix_block(bool remove_all_entities, std::string &err_msg, std::istringstream &is, std::string &blockout)
+{
+	// map.cpp (ServerMap::loadBlock(std::string *blob, v3s16 p3d, MapSector *sector, bool save_after_load))
+	u8 version = SER_FMT_VER_INVALID;
+	is.read((char*)&version, 1);
+
+	if (is.fail()) {
+		err_msg = "Failed to read MapBlock version";
+		return -1;
+	}
+
+	// mapblock.cpp (MapBlock::deSerialize(std::istream &is, u8 version, bool disk))
+
+	if (version != 25) {
+		err_msg = "Unsupported MapBlock version " + itos(version);
+		return -1;
+	}
+
+	u8 flags = readU8(is);
+
+	/*
+		Bulk node data
+	*/
+	u8 content_width = readU8(is);
+	u8 params_width = readU8(is);
+	if (content_width != 1 && content_width != 2) {
+		err_msg = "Invalid content_width";
+		return -1;
+	}
+	if (params_width != 2) {
+		err_msg = "Invalid params_width";
+		return -1;
+	}
+	//MapNode::deSerializeBulk(is, version, data, nodecount,
+	//		content_width, params_width, true);
+	// mapnode.cpp (MapNode::deSerializeBulk(std::istream &is, int version,
+	//	MapNode *nodes, u32 nodecount,
+	//	u8 content_width, u8 params_width, bool compressed))
+
+	static const u32 nodecount = MAP_BLOCKSIZE * MAP_BLOCKSIZE * MAP_BLOCKSIZE;
+	u32 nodedata_len = nodecount * (content_width + params_width);
+	std::ostringstream nodedata_os(std::ios_base::binary);
+	decompressZlib(is, nodedata_os);
+	if (nodedata_os.str().size() != nodedata_len) {
+		err_msg = "decompress of nodedata resulted in invalid size";
+		return -1;
+	}
+
+	// back to MapBlock::deSerialize
+
+	/*
+		NodeMetadata
+	*/
+	std::ostringstream metadata_os(std::ios_base::binary);
+	decompressZlib(is, metadata_os);
+
+	/*
+		Data that is only on disk
+	*/
+	// Static object code
+	// version
+	u8 static_obj_version = readU8(is);
+	// count
+	u16 static_obj_count = readU16(is);
+	//std::vector<StaticObject> static_stored;
+	//static_stored.reserve(static_obj_count);
+	size_t real_static_obj_count = 0;
+	while (true) {
+		u8 next_byte = is.peek();
+		if (next_byte == 7) { // ACTIVEOBJECT_TYPE_LUAENTITY
+			// type
+			u8 type = readU8(is);
+			// pos
+			v3f pos = readV3F1000(is);
+			// data
+			std::string data = deSerializeString(is);
+			//StaticObject s_obj(type, pos, data);
+			//m_stored.push_back(s_obj);
+			real_static_obj_count++;
+		} else {
+			break;
+		}
+	}
+
+	// Timestamp
+	u32 timestamp = readU32(is);
+
+	// Dynamically re-set ids based on node names
+	NameIdMapping nimap;
+	nimap.deSerialize(is); //TODO surround with try and return -1 on catch
+
+	// Nodetimers
+	NodeTimerList nodetimers;
+	nodetimers.deSerialize(is, version); //TODO surround with try and return -1 on catch
+
+	// deserialize done
+
+	// now check whether a new block has to be written
+	if (static_obj_count < static_obj_count) {
+		err_msg = "Less static objects read than claimed to exist";
+		return -1;
+	}
+	if (!remove_all_entities) {
+		if (real_static_obj_count == static_obj_count)
+			return 0;
+	} else {
+		if (real_static_obj_count == 0)
+			return 0;
+	}
+	// Ok, now we've found a block we need to serialize again
+	std::ostringstream os(std::ios_base::binary);
+
+	writeU8(os, version);
+	writeU8(os, flags);
+
+	writeU8(os, content_width);
+	writeU8(os, params_width);
+	compressZlib(nodedata_os.str(), os);
+
+	compressZlib(metadata_os.str(), os);
+
+	writeU8(os, static_obj_version);
+	writeU16(os, 0); // static_object_count
+
+	writeU32(os, timestamp);
+
+	nimap.serialize(os);
+	nodetimers.serialize(os, version);
+
+	blockout = os.str();
+
+	if (static_obj_count != static_obj_count) {
+		err_msg = "Found " + itos(real_static_obj_count) + "instead of "
+			+ itos(static_obj_count) + " static objects";
+		return 1;
+	} else {
+		err_msg = "Found " + itos(static_obj_count) + " static objects";
+		return 1;
+	}
+}
+
+static bool fix_entities(const GameParams &game_params, const Settings &cmd_args)
 {
 	Settings world_mt;
 	std::string world_mt_path = game_params.world_path + DIR_DELIM + "world.mt";
@@ -992,6 +1139,14 @@ static bool world_stats(const GameParams &game_params, const Settings &cmd_args)
 			<< world_mt_path << "' !" << std::endl;
 		return false;
 	}
+	bool do_fix = false;
+	do_fix = (cmd_args.get("entities") == "fix");
+	bool do_remove = false;
+	do_remove = (cmd_args.get("entities") == "remove");
+	if (do_fix)
+		actionstream << "Fixing entities." << std::endl;
+	if (do_remove)
+		actionstream << "Removing entities." << std::endl;
 	if (!world_mt.exists("backend")) {
 		errorstream << "Please specify your current backend in world.mt:"
 			<< std::endl
@@ -1004,12 +1159,9 @@ static bool world_stats(const GameParams &game_params, const Settings &cmd_args)
 
 	u32 count = 0;
 	u32 valid_count = 0;
+	u32 invalid_count = 0;
+	u32 to_be_fixed_count = 0;
 	time_t last_update_time = 0;
-
-	u8 ver_max = 26;// SER_FMT_VER_HIGHEST_READ;
-	u32 *verstat = new u32[ver_max + 1];
-	for (u8 i = 0; i <= ver_max; i++)
-		verstat[i] = 0;
 
 	bool &kill = *porting::signal_handler_killstatus();
 
@@ -1017,47 +1169,64 @@ static bool world_stats(const GameParams &game_params, const Settings &cmd_args)
 	std::vector<v3s16> blocks;
 	db->listAllLoadableBlocks(blocks);
 	actionstream << "Block list loaded." << std::endl;
-	//new_db->beginSave();
+
+	if (do_fix || do_remove) {
+		db->beginSave();
+	}
 	for (std::vector<v3s16>::const_iterator it = blocks.begin(); it != blocks.end(); ++it) {
 		if (kill) return false;
 
 		const std::string &data = db->loadBlock(*it);
 		if (!data.empty()) {
-			//new_db->saveBlock(*it, data);
-			valid_count++;
-			u8 ver = readU8((u8 *)data.c_str());
-			if (ver <= ver_max)
-				verstat[ver]++;
-			else
-				errorstream << "Block " << PP(*it) << " has invalid version " << ver << ", skipping it." << std::endl;
+			std::string err_msg = "";
+			std::istringstream is(data, std::ios_base::binary);
+			std::string new_blk = "";
+			int r = fix_block(do_remove, err_msg, is, new_blk);
+			if (r == 0) // valid block with valid number of entities
+				valid_count++;
+			else if (r == -1) { // invalid block
+				errorstream << "Error while checking block at " << PP(*it) << ": '" << err_msg << "', skipping it." << std::endl;
+				invalid_count++;
+			} else if (r == 1) { // block with invalid number of entities
+				if (!do_remove)
+					actionstream << "Found bad block at " << PP(*it) << ": '" << err_msg << "'." << std::endl;
+				to_be_fixed_count++;
+				if (do_fix || do_remove) {
+					db->saveBlock(*it, new_blk);
+				}
+			}
 		} else {
 			errorstream << "Failed to load block " << PP(*it) << ", skipping it." << std::endl;
 		}
 		if (++count % 0xFF == 0 && time(NULL) - last_update_time >= 1) {
 			std::cerr << " Scanned " << count << " blocks, "
 				<< (100.0 * count / blocks.size()) << "% completed.\r";
-			//new_db->endSave();
-			//new_db->beginSave();
+			if (do_fix || do_remove) {
+				db->endSave();
+				db->beginSave();
+			}
 			last_update_time = time(NULL);
 		}
 	}
 	std::cerr << std::endl;
-	//new_db->endSave();
+	if (do_fix || do_remove) {
+		db->endSave();
+	}
 	delete db;
 
 	actionstream << "Blocks scanned successfully." << std::endl;
 	actionstream << "======================" << std::endl;
 	actionstream << "WORLD STATS" << std::endl;
-	actionstream << "Found " << blocks.size() << " blocks, "
-		<< valid_count << " valid ones(" << blocks.size() - valid_count << " invalid)." << std::endl;
-	actionstream << "serialisation version / blocks count "
-		"(versions without blocks omitted):" << std::endl;
-	for (u8 i = 0; i <= ver_max; i++)
-		if (verstat[i] > 0)
-			actionstream << itos(i) << " / " << verstat[i] << std::endl;
-	//"scanned blocks." << count << " blocks" << std::endl;
-
-	delete [] verstat;
+	if (!do_remove)
+		actionstream << "Found " << blocks.size() << " blocks, "
+			<< valid_count << " valid ones, "
+			<< invalid_count << " invalid, "
+			<< to_be_fixed_count << " bad ones with too much static entities." << std::endl;
+	else
+		actionstream << "Found " << blocks.size() << " blocks, "
+			<< valid_count << " valid ones, "
+			<< invalid_count << " invalid, "
+			<< to_be_fixed_count << " ones which had entities." << std::endl;
 
 	return true;
 }
