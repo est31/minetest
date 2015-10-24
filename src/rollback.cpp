@@ -25,6 +25,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "mapnode.h"
 #include "gamedef.h"
 #include "nodedef.h"
+#include "porting.h"
 #include "util/serialize.h"
 #include "util/string.h"
 #include "util/numeric.h"
@@ -895,6 +896,10 @@ void RollbackManager::flush()
 
 	std::list<RollbackAction>::const_iterator iter;
 
+	size_t sz = action_todisk_buffer.size();
+
+	u32 start_time = porting::getTimeUs();
+
 	for (iter  = action_todisk_buffer.begin();
 			iter != action_todisk_buffer.end();
 			++iter) {
@@ -907,6 +912,13 @@ void RollbackManager::flush()
 
 	sqlite3_exec(db, "COMMIT", NULL, NULL, NULL);
 	action_todisk_buffer.clear();
+
+	u32 end_time = porting::getTimeUs();
+
+	if (sz > 0)
+		actionstream << "ROLLBACK DEBUG: Flushing " << sz << " actions took "
+			<< end_time - start_time << " us ( "
+			<< (end_time - start_time) / sz << " per instance)" << std::endl;
 }
 
 
