@@ -511,7 +511,7 @@ bool GUIChatConsole::OnEvent(const SEvent& event)
 			// Ctrl-V pressed
 			// paste text from clipboard
 			IOSOperator *os_operator = Environment->getOSOperator();
-			const c8 *text = os_operator->getTextFromClipboard();
+			const c8 *text = getXorgClipboardContent(os_operator);
 			if (text)
 			{
 				std::wstring wtext = narrow_to_wide(text);

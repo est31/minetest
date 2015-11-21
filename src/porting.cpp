@@ -48,6 +48,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifdef XORG_USED
 	#include <X11/Xlib.h>
 	#include <X11/Xutil.h>
+	#include <X11/Xatom.h>
 #endif
 
 #include "config.h"
@@ -564,6 +565,60 @@ void setXorgClassHint(const video::SExposedVideoData &video_data,
 #endif
 }
 
+#ifdef XORG_USED
+
+static std::string clipboard_cache;
+
+#endif
+
+const char *getXorgClipboardContent(void *os_operator)
+{
+#ifdef XORG_USED
+	IOSOperator *ios_operator = (IOSOperator *)os_operator;
+
+	// First check whether our application owns the clipboard,
+	// or whether the irrlicht way works
+	clipboard_cache = ios_operator->getTextFromClipboard();
+	if (!clipboard_cache.empty())
+		return clipboard_cache.c_str();
+
+	Window ownerWindow = XGetSelectionOwner(display, X_ATOM_CLIPBOARD);
+	if (ownerWindow != None) {
+		XConvertSelection(display, X_ATOM_CLIPBOARD, XA_PRIMARY, None, ownerWindow, CurrentTime);
+		XFlush(display);
+
+		// check for data
+		Atom type;
+		int format;
+		unsigned long numItems, bytesLeft, dummy;
+		unsigned char *data;
+		XGetWindowProperty(display, ownerWindow,
+			XA_PRIMARY,      // property name
+			0,               // offset
+			0,               // length (we only check for data, so 0)
+			0,               // Delete 0==false
+			AnyPropertyType, // AnyPropertyType or property identifier
+			&type,           // return type
+			&format,         // return format
+			&numItems,       // number items
+			&bytesLeft,      // remaining bytes for partial reads
+			&data);          // data
+		if (bytesLeft > 0) {
+			// there is some data to get
+			int result = XGetWindowProperty(display, ownerWindow, XA_PRIMARY, 0,
+				bytesLeft, 0, AnyPropertyType, &type, &format,
+				&numItems, &dummy, &data);
+			if (result == Success)
+				clipboard_cache = (char *)data;
+			XFree(data);
+        }
+    }
+
+    return clipboard_cache.c_str();
+#else
+	FATAL_ERROR("getXorgClipboardContent() called while not being compiled with Xorg");
+#endif
+}
 
 ////
 //// Video/Display Information (Client-only)

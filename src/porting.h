@@ -339,6 +339,11 @@ inline const char *getPlatformName()
 void setXorgClassHint(const video::SExposedVideoData &video_data,
 	const std::string &name);
 
+// Workaround for irrlicht bug which doesn't let one read
+// clipboard from external applications on linux + X11.
+// The ios_operator param should point to a valid irrlicht IOSOperator.
+const char *getXorgClipboardContent(void *ios_operator);
+
 // This only needs to be called at the start of execution, since all future
 // threads in the process inherit this exception handler
 void setWin32ExceptionHandler();

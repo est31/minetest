@@ -384,7 +384,7 @@ bool intlGUIEditBox::processKey(const SEvent& event)
 				const s32 realmend = MarkBegin < MarkEnd ? MarkEnd : MarkBegin;
 
 				// add new character
-				const c8* p = Operator->getTextFromClipboard();
+				const c8* p = porting::getXorgClipboardContent(Operator);
 				if (p)
 				{
 					if (MarkBegin == MarkEnd)
