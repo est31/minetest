@@ -26,6 +26,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <fstream>
 #include "log.h"
 #include "config.h"
+#ifdef __ANDROID__
+#include "porting_android.h"
+#endif
 
 namespace fs
 {
@@ -207,6 +210,33 @@ std::string TempPath()
 
 std::vector<DirListNode> GetDirListing(const std::string &pathstring)
 {
+#ifdef __ANDROID__
+	// TODO find out whether this works...
+	// whether AAssetManager_open returns NULL if the path doesn't exist,
+	// and whether AAsset_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
+	if (str_starts_with(pathstring, "asset://")) {
+		std::string asset_path = pathstring.substr(8);
+		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
+			asset_path.c_str());
+		std::vector<DirListNode> listing;
+		for (const char *fname; (fname = AAssetDir_getNextFileName(dir)) != NULL;) {
+			// Be sure to not include '..' in the results.
+			// Its not nice to look at.
+			if ((fname == ".") || (fname == "..")) {
+				continue;
+			}
+			DirListNode node;
+			node.name = std::string("asset:://") + fname;
+			AAssetDir *subd = AAssetManager_openDir(::porting::g_asset_manager,
+			fname);
+			AAssetDir_close(subd);
+			node.dir = (subd != NULL);
+			listing.push_back(node);
+		}
+		AAssetDir_close(dir);
+		return listing;
+	}
+#endif
 	std::vector<DirListNode> listing;
 
 	DIR *dp;
@@ -260,6 +290,11 @@ std::vector<DirListNode> GetDirListing(const std::string &pathstring)
 
 bool CreateDir(const std::string &path)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	int r = mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	if(r == 0)
 	{
@@ -276,17 +311,52 @@ bool CreateDir(const std::string &path)
 
 bool PathExists(const std::string &path)
 {
+#ifdef __ANDROID__
+	// TODO find out whether this works...
+	// whether AAssetManager_open returns NULL if the path doesn't exist,
+	// and whether AAsset_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
+	if (str_starts_with(path, "asset://")) {
+		std::string asset_path = path.substr(8);
+		AAsset *asset = AAssetManager_open(::porting::g_asset_manager,
+			asset_path.c_str(), AASSET_MODE_UNKNOWN);
+		AAsset_close(asset);
+		if (asset)
+			return true;
+		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
+			asset_path.c_str());
+		AAssetDir_close(dir);
+		return dir;
+	}
+#endif
 	struct stat st;
 	return (stat(path.c_str(),&st) == 0);
 }
 
 bool IsPathAbsolute(const std::string &path)
 {
+#if __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return true;
+	}
+#endif
 	return path[0] == '/';
 }
 
 bool IsDir(const std::string &path)
 {
+#ifdef __ANDROID__
+	// TODO find out whether this works...
+	// whether AAssetManager_openDir returns NULL if the path doesn't exist,
+	// and whether AAssetDir_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
+	if (str_starts_with(path, "asset://")) {
+		std::string asset_path = path.substr(8);
+
+		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
+			asset_path.c_str());
+		AAssetDir_close(dir);
+		return dir;
+	}
+#endif
 	struct stat statbuf;
 	if(stat(path.c_str(), &statbuf))
 		return false; // Actually error; but certainly not a directory
@@ -300,6 +370,11 @@ bool IsDirDelimiter(char c)
 
 bool RecursiveDelete(const std::string &path)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	/*
 		Execute the 'rm' command directly, by fork() and execve()
 	*/
@@ -346,6 +421,11 @@ bool RecursiveDelete(const std::string &path)
 
 bool DeleteSingleFileOrEmptyDirectory(const std::string &path)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	if(IsDir(path)){
 		bool did = (rmdir(path.c_str()) == 0);
 		if(!did)
@@ -400,6 +480,11 @@ bool DeletePaths(const std::vector<std::string> &paths)
 	// Go backwards to succesfully delete the output of GetRecursiveSubPaths
 	for(int i=paths.size()-1; i>=0; i--){
 		const std::string &path = paths[i];
+#ifdef __ANDROID__
+		if (str_starts_with(path, "asset://")) {
+			return false;
+		}
+#endif
 		bool did = DeleteSingleFileOrEmptyDirectory(path);
 		if(!did){
 			errorstream<<"Failed to delete "<<path<<std::endl;
@@ -411,6 +496,11 @@ bool DeletePaths(const std::vector<std::string> &paths)
 
 bool RecursiveDeleteContent(const std::string &path)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	infostream<<"Removing content of \""<<path<<"\""<<std::endl;
 	std::vector<DirListNode> list = GetDirListing(path);
 	for(unsigned int i=0; i<list.size(); i++)
@@ -430,7 +520,11 @@ bool RecursiveDeleteContent(const std::string &path)
 
 bool CreateAllDirs(const std::string &path)
 {
-
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	std::vector<std::string> tocreate;
 	std::string basepath = path;
 	while(!PathExists(basepath))
@@ -448,6 +542,14 @@ bool CreateAllDirs(const std::string &path)
 
 bool CopyFileContents(const std::string &source, const std::string &target)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(target, "asset://")) {
+		return false;
+	} else if (str_starts_with(source, "asset://")) {
+		//TODO implement for source being from asset.
+		return false;
+	}
+#endif
 	FILE *sourcefile = fopen(source.c_str(), "rb");
 	if(sourcefile == NULL){
 		errorstream<<source<<": can't open for reading: "
@@ -502,6 +604,14 @@ bool CopyFileContents(const std::string &source, const std::string &target)
 
 bool CopyDir(const std::string &source, const std::string &target)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(target, "asset://")) {
+		return false;
+	} else if (str_starts_with(source, "asset://")) {
+		//TODO implement for source being from asset.
+		return false;
+	}
+#endif
 	if(PathExists(source)){
 		if(!PathExists(target)){
 			fs::CreateAllDirs(target);
@@ -683,6 +793,11 @@ const char *GetFilenameFromPath(const char *path)
 
 bool safeWriteToFile(const std::string &path, const std::string &content)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(path, "asset://")) {
+		return false;
+	}
+#endif
 	std::string tmp_file = path + ".~mt";
 
 	// Write to a tmp file
@@ -709,6 +824,11 @@ bool safeWriteToFile(const std::string &path, const std::string &content)
 
 bool Rename(const std::string &from, const std::string &to)
 {
+#ifdef __ANDROID__
+	if (str_starts_with(from, "asset://") || str_starts_with(to, "asset://")) {
+		return false;
+	}
+#endif
 	return rename(from.c_str(), to.c_str()) == 0;
 }
 

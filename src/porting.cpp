@@ -612,6 +612,9 @@ static irr::IrrlichtDevice *device;
 void initIrrlicht(irr::IrrlichtDevice *device_)
 {
 	device = device_;
+#ifdef __ANDROID__
+	initIrrlichtAndroid(device_);
+#endif
 }
 
 v2u32 getWindowSize()

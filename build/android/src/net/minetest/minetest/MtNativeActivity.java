@@ -2,6 +2,7 @@ package net.minetest.minetest;
 
 import android.app.NativeActivity;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.WindowManager;
@@ -12,7 +13,7 @@ public class MtNativeActivity extends NativeActivity {
 		super.onCreate(savedInstanceState);
 		m_MessagReturnCode = -1;
 		m_MessageReturnValue = "";
-
+		m_asset_mgr = getAssets();
 	}
 
 	@Override
@@ -24,6 +25,10 @@ public class MtNativeActivity extends NativeActivity {
 	public void copyAssets() {
 		Intent intent = new Intent(this, MinetestAssetCopy.class);
 		startActivity(intent);
+	}
+
+	public AssetManager getAssetManager() {
+		return m_asset_mgr;
 	}
 
 	public void showDialog(String acceptButton, String hint, String current,
@@ -95,6 +100,7 @@ public class MtNativeActivity extends NativeActivity {
 		System.loadLibrary("minetest");
 	}
 
+	private AssetManager m_asset_mgr;
 	private int m_MessagReturnCode;
 	private String m_MessageReturnValue;
 }

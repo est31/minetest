@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "util/numeric.h"
 #include "porting.h"
 #include "porting_android.h"
+#include "android_asset_loader.h"
 #include "threading/thread.h"
 #include "config.h"
 #include "filesys.h"
@@ -32,6 +33,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <sstream>
 #include <exception>
 #include <stdlib.h>
+#include <android/asset_manager_jni.h>
 
 #ifdef GPROF
 #include "prof.h"
@@ -82,9 +84,10 @@ namespace porting {
 
 std::string path_storage = DIR_DELIM "sdcard" DIR_DELIM;
 
-android_app* app_global;
-JNIEnv*      jnienv;
-jclass       nativeActivity;
+android_app   *app_global;
+JNIEnv        *jnienv;
+jclass         nativeActivity;
+AAssetManager *g_asset_manager;
 
 jclass findClass(std::string classname)
 {
@@ -121,6 +124,7 @@ void copyAssets()
 void initAndroid()
 {
 	porting::jnienv = NULL;
+	porting::g_asset_manager = NULL;
 	JavaVM *jvm = app_global->activity->vm;
 	JavaVMAttachArgs lJavaVMAttachArgs;
 	lJavaVMAttachArgs.version = JNI_VERSION_1_6;
@@ -143,6 +147,16 @@ void initAndroid()
 			std::endl;
 	}
 
+	jmethodID mgr_get = jnienv->GetMethodID(nativeActivity,
+			"getAssetManager", "()Landroid/content/res/AssetManager;");
+	jobject mgr = jnienv->CallObjectMethod(app_global->activity->clazz,
+		mgr_get);
+	// we never have to call delete on this,
+	// as the object is global :)
+	// probably this even isn't required, but we want to be extra sure...
+	mgr = porting::jnienv->NewGlobalRef(mgr);
+	porting::g_asset_manager = AAssetManager_fromJava(jnienv, mgr);
+
 #ifdef GPROF
 	/* in the start-up code */
 	__android_log_print(ANDROID_LOG_ERROR, PROJECT_NAME_C,
@@ -162,6 +176,16 @@ void cleanupAndroid()
 
 	JavaVM *jvm = app_global->activity->vm;
 	jvm->DetachCurrentThread();
+}
+
+void initIrrlichtAndroid(IrrlichtDevice *device)
+{
+	//TODO error if g_asset_manager is still NULL at this moment
+	assert(g_asset_manager);
+	device->getFileSystem()->addArchiveLoader(new AssetManagerLoader(g_asset_manager));
+	//TODO error if following cmd returns false
+	device->getFileSystem()->addFileArchive("asset_fake_archive",
+		false, false, io::EFAT_UNKNOWN);
 }
 
 static std::string javaStringToUTF8(jstring js)

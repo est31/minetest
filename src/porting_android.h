@@ -26,6 +26,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <jni.h>
 #include <android_native_app_glue.h>
 #include <android/log.h>
+#include <android/asset_manager.h>
+#include <IrrlichtDevice.h>
 
 #include <string>
 
@@ -36,11 +38,15 @@ extern android_app *app_global;
 /** java <-> c++ interaction interface **/
 extern JNIEnv *jnienv;
 
+extern AAssetManager *g_asset_manager;
+
 /**
  * do initialization required on android only
  */
 void initAndroid();
 void cleanupAndroid();
+
+void initIrrlichtAndroid(IrrlichtDevice *);
 
 /**
  * Initializes path_* variables for Android
