@@ -24,14 +24,17 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #include <android/asset_manager.h>
-#include <IFileArchive.h>
 #include "irrlichttypes.h"
+#include <IFileArchive.h>
+#include <stdio.h>
 
-class AssetReadFile : public io::ReadFile {
+class AssetReadFile : public io::IReadFile {
 public:
 
-	AssetReadFile(AAsset *asset, core::string<fschar_t> fname):
-		m_asset(asset), m_filename(fname)
+	AssetReadFile(AAsset *asset,
+		core::string<fschar_t> fname,
+		long init_offs = 0):
+		m_asset(asset), m_filename(fname), m_offs(init_offs)
 	{}
 	~AssetReadFile()
 	{
@@ -39,22 +42,29 @@ public:
 	}
 	virtual s32 read(void* buffer, u32 sizeToRead)
 	{
-		return AAsset_read(m_asset, buffer, sizeToRead);
+		s32 r = AAsset_read(m_asset, buffer, sizeToRead);
+		m_offs += r;
+		return r;
 	}
 
 	virtual bool seek(long finalPos, bool relativeMovement = false)
 	{
-		// TODO
+		bool success = AAsset_seek(m_asset,
+			finalPos, relativeMovement ? SEEK_CUR : SEEK_SET);
+		if (success) {
+			m_offs = relativeMovement ? m_offs + finalPos : finalPos;
+		}
+		return success;
 	}
 
 	virtual long getSize() const
 	{
-		AAsset_getLength64(m_asset);
+		AAsset_getLength(m_asset);
 	}
 
 	virtual long getPos() const
 	{
-		// TODO
+		return m_offs;
 	}
 
 	virtual const core::string<fschar_t> &getFileName() const
@@ -62,27 +72,31 @@ public:
 		return m_filename;
 	}
 private:
+	long m_offs;
 	AAsset *m_asset;
 	core::string<fschar_t> m_filename;
 };
 
 class AssetManagerArchive : public io::IFileArchive {
-	AssetManagerLoader(AAssetManager *mgr): m_mgr(mgr)
-	{}
+public:
+	AssetManagerArchive(AAssetManager *mgr): m_mgr(mgr)
+	{
+		m_archive_name = "asset_fake_archive";
+	}
 
 	virtual io::IReadFile *createAndOpenFile(const core::string<fschar_t> &filename)
 	{
 		if (filename.find("asset://") != 0)
 			return NULL;
 		core::string<fschar_t> trimmed = filename.subString(8, filename.size() - 8);
-		AAsset *asset = AAssetManager_open(m_mgr, trimmed, AASSET_MODE_UNKNOWN);
+		AAsset *asset = AAssetManager_open(m_mgr, trimmed.c_str(), AASSET_MODE_UNKNOWN);
 		return new AssetReadFile(asset, filename);
 	}
 	virtual io::IReadFile *createAndOpenFile(u32 index)
 	{
 		return NULL;
 	}
-	virtual const io::IFileList *getFileList()
+	virtual const io::IFileList *getFileList() const
 	{
 		return NULL;
 	}
@@ -90,7 +104,12 @@ class AssetManagerArchive : public io::IFileArchive {
 	{
 		return io::EFAT_UNKNOWN;
 	}
+	virtual const core::string<fschar_t> &getArchiveName() const
+	{
+		return m_archive_name;
+	}
 private:
+	core::string<fschar_t> m_archive_name;
 	AAssetManager *m_mgr;
 };
 
@@ -102,7 +121,7 @@ public:
 	virtual io::IFileArchive *createArchive(const core::string<fschar_t> &filename, bool ignoreCase, bool ignorePaths) const
 	{
 		if (filename == "asset_fake_archive") {
-			return AssetManagerLoader(m_mgr);
+			return new AssetManagerArchive(m_mgr);
 		} else {
 			return NULL;
 		}
