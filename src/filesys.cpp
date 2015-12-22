@@ -211,14 +211,13 @@ std::string TempPath()
 std::vector<DirListNode> GetDirListing(const std::string &pathstring)
 {
 #ifdef __ANDROID__
-	// TODO find out whether this works...
-	// whether AAssetManager_open returns NULL if the path doesn't exist,
-	// and whether AAsset_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
 	if (str_starts_with(pathstring, "asset://")) {
 		std::string asset_path = pathstring.substr(8);
 		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
 			asset_path.c_str());
 		std::vector<DirListNode> listing;
+		if (!dir)
+			return listing;
 		for (const char *fname; (fname = AAssetDir_getNextFileName(dir)) != NULL;) {
 			// Be sure to not include '..' in the results.
 			// Its not nice to look at.
@@ -312,19 +311,18 @@ bool CreateDir(const std::string &path)
 bool PathExists(const std::string &path)
 {
 #ifdef __ANDROID__
-	// TODO find out whether this works...
-	// whether AAssetManager_open returns NULL if the path doesn't exist,
-	// and whether AAsset_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
 	if (str_starts_with(path, "asset://")) {
 		std::string asset_path = path.substr(8);
 		AAsset *asset = AAssetManager_open(::porting::g_asset_manager,
 			asset_path.c_str(), AASSET_MODE_UNKNOWN);
-		AAsset_close(asset);
-		if (asset)
+		if (asset) {
+			AAsset_close(asset);
 			return true;
+		}
 		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
 			asset_path.c_str());
-		AAssetDir_close(dir);
+		if (dir)
+			AAssetDir_close(dir);
 		return dir;
 	}
 #endif
