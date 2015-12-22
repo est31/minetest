@@ -90,6 +90,8 @@ public:
 			return NULL;
 		core::string<fschar_t> trimmed = filename.subString(8, filename.size() - 8);
 		AAsset *asset = AAssetManager_open(m_mgr, trimmed.c_str(), AASSET_MODE_UNKNOWN);
+		if (!asset)
+			return NULL;
 		return new AssetReadFile(asset, filename);
 	}
 	virtual io::IReadFile *createAndOpenFile(u32 index)

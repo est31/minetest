@@ -183,13 +183,14 @@ SoundBuffer *load_ogg_from_file(const std::string &path)
 	// This requires libvorbis >= 1.3.2, as
 	// previous versions expect a non-const char *
 	FILE *f = android_fopen(path.c_str(), "rb");
+	if (!f) {
+		infostream << "Audio: Can't open " << path
+			<< " for decoding" << std::endl;
+	}
 	if (ov_open(f, &oggFile, NULL, 0) != 0) {
 		infostream << "Audio: Error opening " << path
 			<< " for decoding" << std::endl;
-		// We are instructed by ov_open docs to
-		// call fclose on the descriptor ov_open fails.
-		// But doing this will result in crash...
-		// fclose(f);
+		fclose(f);
 		return NULL;
 	}
 
