@@ -23,6 +23,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "porting.h"
 #include "server.h"
 #include "settings.h"
+#ifdef __ANDROID__
+#include "android_asset_funopen.h"
+#endif
 
 #include <cerrno>
 #include <string>
@@ -264,7 +267,7 @@ bool ScriptApiSecurity::safeLoadFile(lua_State *L, const char *path)
 		fp = stdin;
 		chunk_name = const_cast<char *>("=stdin");
 	} else {
-		fp = fopen(path, "rb");
+		fp = android_fopen(path, "rb");
 		if (!fp) {
 			lua_pushfstring(L, "%s: %s", path, strerror(errno));
 			return false;

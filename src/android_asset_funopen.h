@@ -20,6 +20,10 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #ifndef __ANDROID_ASSET_FUNOPEN_H__
 #define __ANDROID_ASSET_FUNOPEN_H__
 
+#ifndef __ANDROID__
+#error this header file has to be included on android port only!
+#endif
+
 #include <stdio.h>
 #include <android/asset_manager.h>
 
@@ -29,7 +33,7 @@ extern "C" {
 
 FILE* android_fopen(const char *fname, const char *mode);
 
-#define fopen(name, mode) android_fopen(name, mode)
+//#define fopen(name, mode) android_fopen(name, mode)
 
 #ifdef __cplusplus
 }

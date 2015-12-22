@@ -242,7 +242,7 @@ void initializePathsAndroid()
 	path_storage = getAndroidPath(cls_Env, NULL, cls_File, mt_getAbsPath,
 			"getExternalStorageDirectory");
 	path_user    = path_storage + DIR_DELIM + PROJECT_NAME_C;
-	path_share   = path_storage + DIR_DELIM + PROJECT_NAME_C;
+	path_share   = "asset://" PROJECT_NAME_C;
 
 	migrateCachePath();
 }

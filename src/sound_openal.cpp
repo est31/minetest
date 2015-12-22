@@ -44,6 +44,9 @@ with this program; ifnot, write to the Free Software Foundation, Inc.,
 #include <map>
 #include <vector>
 #include <fstream>
+#ifdef __ANDROID__
+#include "android_asset_funopen.h"
+#endif
 
 #define BUFFER_SIZE 30000
 
@@ -179,9 +182,11 @@ SoundBuffer *load_ogg_from_file(const std::string &path)
 	// Try opening the given file.
 	// This requires libvorbis >= 1.3.2, as
 	// previous versions expect a non-const char *
-	if (ov_fopen(path.c_str(), &oggFile) != 0) {
+	FILE *f = android_fopen(path.c_str(), "rb");
+	if (ov_open(f, &oggFile, NULL, 0) != 0) {
 		infostream << "Audio: Error opening " << path
 			<< " for decoding" << std::endl;
+		fclose(f);
 		return NULL;
 	}
 

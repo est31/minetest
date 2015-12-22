@@ -2273,30 +2273,48 @@ void Server::fillMediaCache()
 			// Ok, attempt to load the file and add to cache
 			std::string filepath = mediapath + DIR_DELIM + filename;
 			// Read data
-			std::ifstream fis(filepath.c_str(), std::ios_base::binary);
-			if (!fis.good()) {
-				errorstream << "Server::fillMediaCache(): Could not open \""
-						<< filename << "\" for reading" << std::endl;
-				continue;
-			}
 			std::ostringstream tmp_os(std::ios_base::binary);
-			bool bad = false;
-			for(;;) {
-				char buf[1024];
-				fis.read(buf, 1024);
-				std::streamsize len = fis.gcount();
-				tmp_os.write(buf, len);
-				if (fis.eof())
-					break;
-				if (!fis.good()) {
-					bad = true;
-					break;
+			if (str_starts_with(filepath, "asset://")) {
+				AAsset *asset = AAssetManager_open(porting::g_asset_manager,
+					filepath.c_str() + 8, AASSET_MODE_BUFFER);
+				if (!asset) {
+					errorstream << "Server::fillMediaCache(): Could not open asset \""
+						<< filepath << "\" for reading" << std::endl;
+					continue;
 				}
-			}
-			if(bad) {
-				errorstream<<"Server::fillMediaCache(): Failed to read \""
-						<< filename << "\"" << std::endl;
-				continue;
+				size_t siz = AAsset_getLength(asset);
+				const char *buf = (char *)AAsset_getBuffer(asset);
+				if (!asset) {
+					errorstream << "Server::fillMediaCache(): Failed to read asset \""
+						<< filepath << "\"" << std::endl;
+					continue;
+				}
+				tmp_os.write(buf, siz);
+			} else {
+				std::ifstream fis(filepath.c_str(), std::ios_base::binary);
+				if (fis.good() == false) {
+					errorstream << "Server::fillMediaCache(): Could not open \""
+						<< filepath << "\" for reading" << std::endl;
+					continue;
+				}
+				bool bad = false;
+				for(;;) {
+					char buf[1024];
+					fis.read(buf, 1024);
+					std::streamsize len = fis.gcount();
+					tmp_os.write(buf, len);
+					if (fis.eof())
+						break;
+					if (!fis.good()) {
+						bad = true;
+						break;
+					}
+				}
+				if (bad) {
+					errorstream << "Server::fillMediaCache(): Failed to read \""
+						<< filepath << "\"" << std::endl;
+					continue;
+				}
 			}
 			if(tmp_os.str().length() == 0) {
 				errorstream << "Server::fillMediaCache(): Empty file \""
@@ -2388,31 +2406,49 @@ void Server::sendRequestedMedia(u16 peer_id,
 		std::string tpath = m_media[name].path;
 
 		// Read data
-		std::ifstream fis(tpath.c_str(), std::ios_base::binary);
-		if(fis.good() == false){
-			errorstream<<"Server::sendRequestedMedia(): Could not open \""
-					<<tpath<<"\" for reading"<<std::endl;
-			continue;
-		}
 		std::ostringstream tmp_os(std::ios_base::binary);
-		bool bad = false;
-		for(;;) {
-			char buf[1024];
-			fis.read(buf, 1024);
-			std::streamsize len = fis.gcount();
-			tmp_os.write(buf, len);
-			file_size_bunch_total += len;
-			if(fis.eof())
-				break;
-			if(!fis.good()) {
-				bad = true;
-				break;
+		if (str_starts_with(tpath, "asset://")) {
+			AAsset *asset = AAssetManager_open(porting::g_asset_manager,
+				tpath.c_str() + 8, AASSET_MODE_BUFFER);
+			if (!asset) {
+				errorstream << "Server::sendRequestedMedia(): Could not open asset \""
+					<< name << "\" for reading" << std::endl;
+				continue;
 			}
-		}
-		if(bad) {
-			errorstream<<"Server::sendRequestedMedia(): Failed to read \""
-					<<name<<"\""<<std::endl;
-			continue;
+			size_t siz = AAsset_getLength(asset);
+			const char *buf = (char *)AAsset_getBuffer(asset);
+			if (!asset) {
+				errorstream << "Server::sendRequestedMedia(): Failed to read asset \""
+					<< name << "\"" << std::endl;
+				continue;
+			}
+			tmp_os.write(buf, siz);
+		} else {
+			std::ifstream fis(tpath.c_str(), std::ios_base::binary);
+			if (fis.good() == false) {
+				errorstream << "Server::sendRequestedMedia(): Could not open \""
+					<< tpath << "\" for reading" << std::endl;
+				continue;
+			}
+			bool bad = false;
+			for(;;) {
+				char buf[1024];
+				fis.read(buf, 1024);
+				std::streamsize len = fis.gcount();
+				tmp_os.write(buf, len);
+				file_size_bunch_total += len;
+				if (fis.eof())
+					break;
+				if (!fis.good()) {
+					bad = true;
+					break;
+				}
+			}
+			if (bad) {
+				errorstream << "Server::sendRequestedMedia(): Failed to read \""
+					<< name << "\"" << std::endl;
+				continue;
+			}
 		}
 		/*infostream<<"Server::sendRequestedMedia(): Loaded \""
 				<<tname<<"\""<<std::endl;*/
