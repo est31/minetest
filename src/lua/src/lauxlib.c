@@ -12,6 +12,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __ANDROID__
+#include "android_asset_funopen.h"
+#define fopen(name, mode) android_fopen(name, mode)
+#endif
 
 /* This file uses only the official API of Lua.
 ** Any function declared here could be written as an application function.

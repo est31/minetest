@@ -41,6 +41,10 @@
 
 #define setprogdir(L)		((void)0)
 
+#ifdef __ANDROID__
+#include "android_asset_funopen.h"
+#define fopen(name, mode) android_fopen(name, mode)
+#endif
 
 static void ll_unloadlib (void *lib);
 static void *ll_load (lua_State *L, const char *path);

@@ -59,7 +59,7 @@ public:
 
 	virtual long getSize() const
 	{
-		AAsset_getLength(m_asset);
+		return AAsset_getLength(m_asset);
 	}
 
 	virtual long getPos() const

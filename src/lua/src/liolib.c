@@ -23,6 +23,10 @@
 #define IO_INPUT	1
 #define IO_OUTPUT	2
 
+#ifdef __ANDROID__
+#include "android_asset_funopen.h"
+#define fopen(name, mode) android_fopen(name, mode)
+#endif
 
 static const char *const fnames[] = {"input", "output"};
 
