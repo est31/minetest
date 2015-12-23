@@ -2426,11 +2426,11 @@ void Server::sendRequestedMedia(u16 peer_id,
 			if (!asset) {
 				errorstream << "Server::sendRequestedMedia(): Failed to read asset \""
 					<< name << "\"" << std::endl;
-				AAsset_close(buf);
+				AAsset_close(asset);
 				continue;
 			}
 			tmp_os.write(buf, siz);
-			AAsset_close(buf);
+			AAsset_close(asset);
 		} else
 #endif
 		{
