@@ -140,9 +140,7 @@ void ScriptApiBase::loadScript(const std::string &script_path)
 	if (m_secure) {
 		ok = ScriptApiSecurity::safeLoadFile(L, script_path.c_str());
 	} else {
-		// TODO don't execute loadfile...
-		ok = ScriptApiSecurity::safeLoadFile(L, script_path.c_str());
-		//ok = !luaL_loadfile(L, script_path.c_str());
+		ok = !luaL_loadfile(L, script_path.c_str());
 	}
 	ok = ok && !lua_pcall(L, 0, 0, error_handler);
 	if (!ok) {
