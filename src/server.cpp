@@ -2274,6 +2274,7 @@ void Server::fillMediaCache()
 			std::string filepath = mediapath + DIR_DELIM + filename;
 			// Read data
 			std::ostringstream tmp_os(std::ios_base::binary);
+#ifdef __ANDROID__
 			if (str_starts_with(filepath, "asset://")) {
 				AAsset *asset = AAssetManager_open(porting::g_asset_manager,
 					filepath.c_str() + 8, AASSET_MODE_BUFFER);
@@ -2284,13 +2285,17 @@ void Server::fillMediaCache()
 				}
 				size_t siz = AAsset_getLength(asset);
 				const char *buf = (char *)AAsset_getBuffer(asset);
-				if (!asset) {
+				if (!buf) {
 					errorstream << "Server::fillMediaCache(): Failed to read asset \""
 						<< filepath << "\"" << std::endl;
+					AAsset_close(asset);
 					continue;
 				}
 				tmp_os.write(buf, siz);
-			} else {
+				AAsset_close(asset);
+			} else
+#endif
+			{
 				std::ifstream fis(filepath.c_str(), std::ios_base::binary);
 				if (fis.good() == false) {
 					errorstream << "Server::fillMediaCache(): Could not open \""
@@ -2407,6 +2412,7 @@ void Server::sendRequestedMedia(u16 peer_id,
 
 		// Read data
 		std::ostringstream tmp_os(std::ios_base::binary);
+#ifdef __ANDROID__
 		if (str_starts_with(tpath, "asset://")) {
 			AAsset *asset = AAssetManager_open(porting::g_asset_manager,
 				tpath.c_str() + 8, AASSET_MODE_BUFFER);
@@ -2420,10 +2426,14 @@ void Server::sendRequestedMedia(u16 peer_id,
 			if (!asset) {
 				errorstream << "Server::sendRequestedMedia(): Failed to read asset \""
 					<< name << "\"" << std::endl;
+				AAsset_close(buf);
 				continue;
 			}
 			tmp_os.write(buf, siz);
-		} else {
+			AAsset_close(buf);
+		} else
+#endif
+		{
 			std::ifstream fis(tpath.c_str(), std::ios_base::binary);
 			if (fis.good() == false) {
 				errorstream << "Server::sendRequestedMedia(): Could not open \""
