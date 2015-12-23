@@ -1,0 +1,27 @@
+diff --git a/source/Irrlicht/CFileSystem.cpp b/source/Irrlicht/CFileSystem.cpp
+index da89bc3..1353a4b 100644
+--- a/source/Irrlicht/CFileSystem.cpp
++++ b/source/Irrlicht/CFileSystem.cpp
+@@ -943,9 +943,19 @@ IFileList* CFileSystem::createEmptyFileList(const io::path& path, bool ignoreCas
+ //! determines if a file exists and would be able to be opened.
+ bool CFileSystem::existFile(const io::path& filename) const
+ {
+-	for (u32 i=0; i < FileArchives.size(); ++i)
+-		if (FileArchives[i]->getFileList()->findFile(filename)!=-1)
+-			return true;
++	for (u32 i=0; i < FileArchives.size(); ++i) {
++		const IFileList *list = FileArchives[i]->getFileList();
++		if (list) {
++			if (list->findFile(filename)!=-1)
++				return true;
++		} else {
++			IReadFile* file = FileArchives[i]->createAndOpenFile(filename);
++			if (file) {
++				file->drop();
++				return true;
++			}
++		}
++	}
+ 
+ #if defined(_MSC_VER)
+ 	#if defined(_IRR_WCHAR_FILESYSTEM)

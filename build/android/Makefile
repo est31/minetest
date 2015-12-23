@@ -524,6 +524,7 @@ irrlicht_download :
 		patch -p1 < ../../irrlicht-touchcount.patch || exit 1;                 \
 		patch -p1 < ../../irrlicht-back_button.patch || exit 1;                \
 		patch -p1 < ../../irrlicht-texturehack.patch || exit 1;                \
+		patch -p1 < ../../irrlicht-existfile.patch || exit 1;                  \
 	fi
 
 $(IRRLICHT_TIMESTAMP) : irrlicht_download
