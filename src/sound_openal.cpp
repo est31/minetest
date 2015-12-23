@@ -186,6 +186,7 @@ SoundBuffer *load_ogg_from_file(const std::string &path)
 	if (!f) {
 		infostream << "Audio: Can't open " << path
 			<< " for decoding" << std::endl;
+		return NULL;
 	}
 	if (ov_open(f, &oggFile, NULL, 0) != 0) {
 		infostream << "Audio: Error opening " << path
