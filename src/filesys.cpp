@@ -343,16 +343,15 @@ bool IsPathAbsolute(const std::string &path)
 bool IsDir(const std::string &path)
 {
 #ifdef __ANDROID__
-	// TODO find out whether this works...
-	// whether AAssetManager_openDir returns NULL if the path doesn't exist,
-	// and whether AAssetDir_close doesnt is safe to be called with NULL (no problem with free either so I guess we shouldnt have issues here).
 	if (str_starts_with(path, "asset://")) {
 		std::string asset_path = path.substr(8);
 
 		AAssetDir *dir = AAssetManager_openDir(::porting::g_asset_manager,
 			asset_path.c_str());
+		if (!dir)
+			return false;
 		AAssetDir_close(dir);
-		return dir;
+		return true;
 	}
 #endif
 	struct stat statbuf;
