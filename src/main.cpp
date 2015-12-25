@@ -50,6 +50,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "fontengine.h"
 #include "gameparams.h"
 #include "database.h"
+#include "strfnd.h"
 #include "config.h"
 #if USE_CURSES
 	#include "terminal_chat_console.h"
@@ -112,6 +113,7 @@ static bool determine_subgame(GameParams *game_params);
 
 static bool run_dedicated_server(const GameParams &game_params, const Settings &cmd_args);
 static bool migrate_database(const GameParams &game_params, const Settings &cmd_args);
+static bool extract_mapblock(const GameParams &game_params, const Settings &cmd_args);
 
 /**********************************************************************/
 
@@ -295,6 +297,8 @@ static void set_allowed_options(OptionList *allowed_options)
 			_("Set gameid (\"--gameid list\" prints available ones)"))));
 	allowed_options->insert(std::make_pair("migrate", ValueSpec(VALUETYPE_STRING,
 			_("Migrate from current map backend to another (Only works when using minetestserver or with --server)"))));
+	allowed_options->insert(std::make_pair("extract", ValueSpec(VALUETYPE_STRING,
+			_("Pass block coordinates and it extracts the block to a file, from the map (Only works when using minetestserver or with --server)"))));
 	allowed_options->insert(std::make_pair("terminal", ValueSpec(VALUETYPE_FLAG,
 			_("Feature an interactive terminal (Only works when using minetestserver or with --server)"))));
 #ifndef SERVER
@@ -830,6 +834,10 @@ static bool run_dedicated_server(const GameParams &game_params, const Settings &
 	if (cmd_args.exists("migrate"))
 		return migrate_database(game_params, cmd_args);
 
+	// Block extraction
+	if (cmd_args.exists("extract"))
+		return extract_mapblock(game_params, cmd_args);
+
 	if (cmd_args.exists("terminal")) {
 #if USE_CURSES
 		bool name_ok = true;
@@ -976,3 +984,30 @@ static bool migrate_database(const GameParams &game_params, const Settings &cmd_
 	return true;
 }
 
+static bool extract_mapblock(const GameParams &game_params, const Settings &cmd_args)
+{
+	std::string mapblock_coords = cmd_args.get("extract");
+	v3s16 extract_pos;
+	Strfnd f(mapblock_coords);
+	f.next("(");
+	extract_pos.X = stoi(f.next(","), -2048, 2047);
+	extract_pos.Y = stoi(f.next(","), -2048, 2047);
+	extract_pos.Z = stoi(f.next(")"), -2048, 2047);
+	Settings world_mt;
+	std::string world_mt_path = game_params.world_path + DIR_DELIM + "world.mt";
+	if (!world_mt.readConfigFile(world_mt_path.c_str())) {
+		errorstream << "Cannot read world.mt!" << std::endl;
+		return false;
+	}
+	Database *db = ServerMap::createDatabase(world_mt.get("backend"), game_params.world_path, world_mt);
+
+	std::string block_content = db->loadBlock(extract_pos);
+	std::string savepath = "extracted-"
+		+ itos(extract_pos.X) + "." + itos(extract_pos.Y) + "." + itos(extract_pos.Z) + ".bin";
+	fs::safeWriteToFile(savepath, block_content);
+	delete db;
+
+	actionstream << "Saved mapblock of " << block_content.size() << " bytes to " << savepath << std::endl;
+
+	return true;
+}
