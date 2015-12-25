@@ -1002,6 +1002,13 @@ static bool extract_mapblock(const GameParams &game_params, const Settings &cmd_
 	Database *db = ServerMap::createDatabase(world_mt.get("backend"), game_params.world_path, world_mt);
 
 	std::string block_content = db->loadBlock(extract_pos);
+
+	if (block_content.size() == 0) {
+		errorstream << "Mapblock at blockpos ("
+			<< extract_pos.X << ", " << extract_pos.Y << ", " << extract_pos.Z
+			<< ") could not be found in database." << std::endl;
+		return false;
+	}
 	std::string savepath = "extracted-"
 		+ itos(extract_pos.X) + "." + itos(extract_pos.Y) + "." + itos(extract_pos.Z) + ".bin";
 	fs::safeWriteToFile(savepath, block_content);
