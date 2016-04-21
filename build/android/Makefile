@@ -600,7 +600,7 @@ $(CURL_LIB): $(CURL_TIMESTAMP) $(OPENSSL_LIB)
 	export CXX=${CROSS_PREFIX}g++;                                             \
 	export TARGET_OS=OS_ANDROID_CROSSCOMPILE;                                  \
 	export CPPFLAGS="$${CPPFLAGS} -I${OPENSSL_DIR}/include                     \
-	${TARGET_CFLAGS_ADDON}";                                                   \
+	-L${OPENSSL_DIR} ${TARGET_CFLAGS_ADDON}";                                  \
 	export CFLAGS="$${CFLAGS} ${TARGET_CFLAGS_ADDON}";                         \
 	export LDFLAGS="$${LDFLAGS} -L${OPENSSL_DIR} ${TARGET_LDFLAGS_ADDON}";     \
 	./configure --host=${TARGET_HOST} --disable-shared --enable-static --with-ssl;  \
