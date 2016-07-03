@@ -56,6 +56,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "log.h"
 #include "util/string.h"
 #include "settings.h"
+#include "minetest-x11-icon.h"
 #include <list>
 
 namespace porting
@@ -611,6 +612,26 @@ void setXorgClassHint(const video::SExposedVideoData &video_data,
 #endif
 }
 
+bool setXorgWindowIcon(const video::SExposedVideoData &video_data)
+{
+#ifdef XORG_USED
+	Display *x11_dpl = (Display *)video_data.OpenGLLinux.X11Display;
+
+	if (x11_dpl == NULL)
+		return false;
+
+	Window x11_win = (Window)video_data.OpenGLLinux.X11Window;
+
+	Atom net_wm_icon = XInternAtom(x11_dpl, "_NET_WM_ICON", False);
+	Atom cardinal = XInternAtom(x11_dpl, "CARDINAL", False);
+	XChangeProperty(x11_dpl, x11_win,
+		net_wm_icon, cardinal, 32,
+		PropModeReplace, (const unsigned char *)g_minetest_x11_icon_buffer,
+		sizeof(g_minetest_x11_icon_buffer) / sizeof(long));
+
+	return true;
+#endif
+}
 
 ////
 //// Video/Display Information (Client-only)
