@@ -552,6 +552,12 @@ void initializePaths()
 	}
 	// Migrate cache folder to new location if possible
 	migrateCachePath();
+
+	// If XDG_DATA_HOME is set, override path_user
+	const char *path_user_data = getenv("XDG_DATA_HOME");
+	if (path_user_data) {
+		path_user = std::string(path_user_data);
+	}
 #endif
 
 	infostream << "Detected share path: " << path_share << std::endl;
