@@ -193,18 +193,58 @@ void decompressZlib(std::istream &is, std::ostream &os)
 
 void compressZstd(SharedBuffer<u8> data, std::ostream &os, int level)
 {
-	// TODO use the streaming API
-	const s32 out_buf_size = 16384;
-	char out_buf[out_buf_size];
-	size_t result = ZSTD_compress(out_buf, out_buf_size,
-		(Bytef*)&data[0], data.getSize(), level);
-	if (ZSTD_isError(result)) {
-		throw SerializationError("compressZstd: compression failed: "
-			+ std::string(ZSTD_getErrorName(result)));
+	ZSTD_CStream *stream = ZSTD_createCStream();
+	ZSTD_initCStream(stream, level);
+
+	size_t result;
+
+	ZSTD_inBuffer in_buf;
+	in_buf.src = (Bytef*)&data[0];
+	in_buf.size = data.getSize();
+	in_buf.pos = 0;
+
+	const s32 buf_size = 16384;
+	char buf[buf_size];
+
+	ZSTD_outBuffer out_buf;
+	out_buf.dst = buf;
+	out_buf.size = buf_size;
+	out_buf.pos = 0;
+
+	// Write the buffer and put whatever compressed stuff we got
+	// into the out buffer.
+	while (in_buf.pos < in_buf.size) {
+		result = ZSTD_compressStream(stream, &out_buf, &in_buf);
+		if (ZSTD_isError(result)) {
+			ZSTD_freeCStream(stream);
+			throw SerializationError("compressZstd: compression failed: "
+				+ std::string(ZSTD_getErrorName(result)));
+		}
+		if (out_buf.pos) {
+			os.write(buf, out_buf.pos);
+			out_buf.pos = 0;
+		}
 	}
-	writeU64(os, result);
-	writeU64(os, data.getSize());
-	os.write(out_buf, result);
+
+	// Now finalize the stream.
+	for (;;) {
+		result = ZSTD_endStream(stream, &out_buf);
+		if (ZSTD_isError(result)) {
+			ZSTD_freeCStream(stream);
+			throw SerializationError("compressZstd: compression failed: "
+				+ std::string(ZSTD_getErrorName(result)));
+		}
+		if (out_buf.pos) {
+			os.write(buf, out_buf.pos);
+			out_buf.pos = 0;
+		}
+		// If the internal buffer is cleared
+		if (result == 0) {
+			break;
+		}
+	}
+
+	ZSTD_freeCStream(stream);
 }
 
 void compressZstd(const std::string &data, std::ostream &os, int level)
@@ -215,26 +255,53 @@ void compressZstd(const std::string &data, std::ostream &os, int level)
 
 void decompressZstd(std::istream &is, std::ostream &os)
 {
-	// TODO use the streaming API
-	u64 compressed_size = readU64(is);
-	u64 decompressed_size = readU64(is);
-	char *input_buf = (char *)malloc(compressed_size);
-	char *output_buf = (char *)malloc(decompressed_size);
-	if (!input_buf || !output_buf) {
-		free(input_buf);
-		throw SerializationError("decompressZstd: allocation failed.");
-	}
-	is.read(input_buf, compressed_size);
-	size_t result = ZSTD_decompress(output_buf, decompressed_size,
-		input_buf, compressed_size);
-	if (ZSTD_isError(result)) {
-		throw SerializationError("compressZstd: compression failed: "
-			+ std::string(ZSTD_getErrorName(result)));
-	}
-	os.write(output_buf, decompressed_size);
+	ZSTD_DStream *stream = ZSTD_createDStream();
+	ZSTD_initDStream(stream);
+	size_t result;
 
-	free(input_buf);
-	free(output_buf);
+	const s32 in_buf_size = 16384;
+	char in_buf_d[in_buf_size];
+
+	const s32 out_buf_size = 16384;
+	char out_buf_d[out_buf_size];
+
+	is.read(in_buf_d, in_buf_size);
+
+	ZSTD_inBuffer in_buf;
+	in_buf.src = in_buf_d;
+	in_buf.size = is.gcount();
+	in_buf.pos = 0;
+
+	ZSTD_outBuffer out_buf;
+	out_buf.dst = out_buf_d;
+	out_buf.size = out_buf_size;
+	out_buf.pos = 0;
+
+	while (in_buf.size > 0) {
+		result = ZSTD_decompressStream(stream, &out_buf, &in_buf);
+		if (ZSTD_isError(result)) {
+			ZSTD_freeDStream(stream);
+			throw SerializationError("decompressZstd: decompression failed: "
+				+ std::string(ZSTD_getErrorName(result)));
+		}
+
+		// Reset the position to 0 if the input buffer has been fully read
+		if (in_buf.size == in_buf.pos) {
+			in_buf.size = 0;
+			in_buf.pos = 0;
+		}
+		// Refill the input buffer
+		is.read(&in_buf_d[in_buf.pos], in_buf_size - in_buf.pos);
+		in_buf.size += is.gcount();
+
+		// Flush the output buffer
+		if (out_buf.pos) {
+			os.write(out_buf_d, out_buf.pos);
+			out_buf.pos = 0;
+		}
+	}
+
+	ZSTD_freeDStream(stream);
 }
 
 void compress(SharedBuffer<u8> data, std::ostream &os, u8 version)

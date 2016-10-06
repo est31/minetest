@@ -88,8 +88,8 @@ void compressZlib(SharedBuffer<u8> data, std::ostream &os, int level = -1);
 void compressZlib(const std::string &data, std::ostream &os, int level = -1);
 void decompressZlib(std::istream &is, std::ostream &os);
 
-void compressZstd(SharedBuffer<u8> data, std::ostream &os, int level = 6);
-void compressZstd(const std::string &data, std::ostream &os, int level = 6);
+void compressZstd(SharedBuffer<u8> data, std::ostream &os, int level = 7);
+void compressZstd(const std::string &data, std::ostream &os, int level = 7);
 void decompressZstd(std::istream &is, std::ostream &os);
 
 // These choose between zstd, zlib and a self-made one according to version
