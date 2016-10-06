@@ -24,6 +24,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 	#define ZLIB_WINAPI
 #endif
 #include "zlib.h"
+#include "zstd.h"
 
 /* report a zlib or i/o error */
 void zerr(int ret)
@@ -186,8 +187,59 @@ void decompressZlib(std::istream &is, std::ostream &os)
 	inflateEnd(&z);
 }
 
+void compressZstd(SharedBuffer<u8> data, std::ostream &os, int level)
+{
+	// TODO use the streaming API
+	const s32 out_buf_size = 16384;
+	char out_buf[out_buf_size];
+	size_t result = ZSTD_compress(out_buf, out_buf_size,
+		(Bytef*)&data[0], data.getSize(), level);
+	if (ZSTD_isError(result)) {
+		throw SerializationError("compressZstd: compression failed: "
+			+ std::string(ZSTD_getErrorName(result)));
+	}
+	writeU64(os, result);
+	writeU64(os, data.getSize());
+	os.write(out_buf, result);
+}
+
+void compressZstd(const std::string &data, std::ostream &os, int level)
+{
+	SharedBuffer<u8> databuf((u8*)data.c_str(), data.size());
+	compressZstd(databuf, os, level);
+}
+
+void decompressZstd(std::istream &is, std::ostream &os)
+{
+	// TODO use the streaming API
+	u64 compressed_size = readU64(is);
+	u64 decompressed_size = readU64(is);
+	char *input_buf = (char *)malloc(compressed_size);
+	char *output_buf = (char *)malloc(decompressed_size);
+	if (!input_buf || !output_buf) {
+		free(input_buf);
+		throw SerializationError("decompressZstd: allocation failed.");
+	}
+	is.read(input_buf, compressed_size);
+	size_t result = ZSTD_decompress(output_buf, decompressed_size,
+		input_buf, compressed_size);
+	if (ZSTD_isError(result)) {
+		throw SerializationError("compressZstd: compression failed: "
+			+ std::string(ZSTD_getErrorName(result)));
+	}
+	os.write(output_buf, decompressed_size);
+
+	free(input_buf);
+	free(output_buf);
+}
+
 void compress(SharedBuffer<u8> data, std::ostream &os, u8 version)
 {
+	if (version >= 26) {
+		compressZstd(data, os);
+		return;
+	}
+
 	if(version >= 11)
 	{
 		compressZlib(data, os);
@@ -238,6 +290,11 @@ void compress(const std::string &data, std::ostream &os, u8 version)
 
 void decompress(std::istream &is, std::ostream &os, u8 version)
 {
+	if (version >= 26) {
+		decompressZstd(data, os);
+		return;
+	}
+
 	if(version >= 11)
 	{
 		decompressZlib(is, os);
