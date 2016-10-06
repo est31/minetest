@@ -295,7 +295,7 @@ void compress(const std::string &data, std::ostream &os, u8 version)
 static void _decompress(std::istream &is, std::ostream &os, u8 version)
 {
 	if (version >= 26) {
-		decompressZstd(data, os);
+		decompressZstd(is, os);
 		return;
 	}
 
