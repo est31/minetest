@@ -229,6 +229,13 @@ void compress(SharedBuffer<u8> data, std::ostream &os, u8 version)
 	os.write((char*)&current_byte, 1);
 }
 
+void compress(const std::string &data, std::ostream &os, u8 version)
+{
+	SharedBuffer<u8> databuf((u8*)data.c_str(), data.size());
+	compress(databuf, os, version);
+}
+
+
 void decompress(std::istream &is, std::ostream &os, u8 version)
 {
 	if(version >= 11)
