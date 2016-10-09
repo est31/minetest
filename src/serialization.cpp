@@ -300,6 +300,12 @@ void decompressZstd(std::istream &is, std::ostream &os)
 		}
 	}
 
+	// Flush the output buffer
+	if (out_buf.pos) {
+		os.write(out_buf_d, out_buf.pos);
+		out_buf.pos = 0;
+	}
+
 	// Unget all stuff that the decompressor didn't read
 	while (in_buf.size) {
 		is.unget();
