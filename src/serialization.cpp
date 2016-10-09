@@ -277,8 +277,7 @@ void decompressZstd(std::istream &is, std::ostream &os)
 	out_buf.size = out_buf_size;
 	out_buf.pos = 0;
 
-	while (in_buf.size > 0) {
-		result = ZSTD_decompressStream(stream, &out_buf, &in_buf);
+	while ((result = ZSTD_decompressStream(stream, &out_buf, &in_buf)) > 0) {
 		if (ZSTD_isError(result)) {
 			ZSTD_freeDStream(stream);
 			throw SerializationError("decompressZstd: decompression failed: "
@@ -299,6 +298,12 @@ void decompressZstd(std::istream &is, std::ostream &os)
 			os.write(out_buf_d, out_buf.pos);
 			out_buf.pos = 0;
 		}
+	}
+
+	// Unget all stuff that the decompressor didn't read
+	while (in_buf.size) {
+		is.unget();
+		in_buf.size--;
 	}
 
 	ZSTD_freeDStream(stream);
