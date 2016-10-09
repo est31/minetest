@@ -289,8 +289,9 @@ void decompressZstd(std::istream &is, std::ostream &os)
 			in_buf.size = 0;
 			in_buf.pos = 0;
 		}
+
 		// Refill the input buffer
-		is.read(&in_buf_d[in_buf.pos], in_buf_size - in_buf.pos);
+		is.read(&in_buf_d[in_buf.size], in_buf_size - in_buf.size);
 		in_buf.size += is.gcount();
 
 		// Flush the output buffer
@@ -307,8 +308,12 @@ void decompressZstd(std::istream &is, std::ostream &os)
 	}
 
 	// Unget all stuff that the decompressor didn't read
-	while (in_buf.size) {
+	is.clear(); // Just in case EOF is set
+	while (in_buf.size > in_buf.pos) {
 		is.unget();
+		if (is.fail() || is.bad()) {
+			throw SerializationError("decompressZstd: unget failed");
+		}
 		in_buf.size--;
 	}
 
