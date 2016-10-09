@@ -138,11 +138,11 @@ void TestCompression::testZlibCompression()
 void TestCompression::testZlibLargeData()
 {
 	for (u32 bb = 0; bb < 100; bb++) {
-	actionstream << "Test: Testing zlib wrappers with a large amount "
+	infostream << "Test: Testing zlib wrappers with a large amount "
 		"of pseudorandom data" << std::endl;
 
 	u32 size = 5000;
-	actionstream << "Test: Input size of large compressZlib is "
+	infostream << "Test: Input size of large compressZlib is "
 		<< size << std::endl;
 
 	std::string data_in;
@@ -152,14 +152,14 @@ void TestCompression::testZlibLargeData()
 		data_in[i] = pseudorandom.range(0, 255);
 
 	std::ostringstream os_compressed(std::ios::binary);
-	compressZstd(data_in, os_compressed);//, 13);
-	actionstream << "Test: Output size of large compressZlib is "
+	compressZstd(data_in, os_compressed, 2);
+	infostream << "Test: Output size of large compressZlib is "
 		<< os_compressed.str().size()<<std::endl;
 
 	std::istringstream is_compressed(os_compressed.str(), std::ios::binary);
 	std::ostringstream os_decompressed(std::ios::binary);
 	decompressZstd(is_compressed, os_decompressed);
-	actionstream << "Test: Output size of large decompressZlib is "
+	infostream << "Test: Output size of large decompressZlib is "
 		<< os_decompressed.str().size() << std::endl;
 
 	std::string str_decompressed = os_decompressed.str();
