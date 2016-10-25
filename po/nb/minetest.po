@@ -9,7 +9,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-08-30 06:18+0200\n"
 "PO-Revision-Date: 2016-10-25 21:41+0000\n"
-"Last-Translator: Petter Reinholdtsen <pere-weblate@hungry.com>\n"
+"Last-Translator: Christian Haug <christian@metaboks.org>\n"
 "Language-Team: Norwegian Bokmål "
 "<https://hosted.weblate.org/projects/minetest/minetest/nb/>\n"
 "Language: nb\n"
@@ -105,7 +105,7 @@ msgstr ""
 
 #: builtin/mainmenu/dlg_config_world.lua
 msgid "Hide Game"
-msgstr "Skjul spill"
+msgstr "Skjul Spill"
 
 #: builtin/mainmenu/dlg_config_world.lua
 msgid "Hide mp content"
