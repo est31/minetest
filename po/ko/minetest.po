@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: minetest\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-08-30 06:18+0200\n"
-"PO-Revision-Date: 2016-10-29 02:17+0000\n"
+"PO-Revision-Date: 2016-10-31 05:41+0000\n"
 "Last-Translator: Han So Ri <2_0_2_0_@naver.com>\n"
 "Language-Team: Korean "
 "<https://hosted.weblate.org/projects/minetest/minetest/ko/>\n"
@@ -1000,7 +1000,7 @@ msgstr "나가기"
 
 #: src/guiVolumeChange.cpp
 msgid "Sound Volume: "
-msgstr "볼륨 조절 "
+msgstr "볼륨 조절: "
 
 #: src/keycode.cpp
 msgid "Apps"
@@ -1072,11 +1072,11 @@ msgstr "도움말"
 
 #: src/keycode.cpp
 msgid "Home"
-msgstr ""
+msgstr "Home"
 
 #: src/keycode.cpp
 msgid "Insert"
-msgstr ""
+msgstr "Insert"
 
 #: src/keycode.cpp
 msgid "Junja"
@@ -1092,23 +1092,23 @@ msgstr ""
 
 #: src/keycode.cpp
 msgid "Left Button"
-msgstr ""
+msgstr "왼쪽된 버튼"
 
 #: src/keycode.cpp
 msgid "Left Control"
-msgstr ""
+msgstr "왼쪽 컨트롤"
 
 #: src/keycode.cpp
 msgid "Left Menu"
-msgstr ""
+msgstr "왼쪽 메뉴"
 
 #: src/keycode.cpp
 msgid "Left Shift"
-msgstr ""
+msgstr "왼쪽 쉬프트"
 
 #: src/keycode.cpp
 msgid "Left Windows"
-msgstr ""
+msgstr "왼쪽 창"
 
 #: src/keycode.cpp
 msgid "Menu"
@@ -1116,11 +1116,11 @@ msgstr "메뉴"
 
 #: src/keycode.cpp
 msgid "Middle Button"
-msgstr ""
+msgstr "가운데 버튼"
 
 #: src/keycode.cpp
 msgid "Minus"
-msgstr ""
+msgstr "마이너스"
 
 #: src/keycode.cpp
 msgid "Mode Change"
@@ -1128,15 +1128,17 @@ msgstr "모드 변경"
 
 #: src/keycode.cpp
 msgid "Next"
-msgstr ""
+msgstr "다음"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Nonconvert"
-msgstr ""
+msgstr "변환 안함"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Num Lock"
-msgstr ""
+msgstr "Num Lock"
 
 #: src/keycode.cpp
 msgid "Numpad *"
@@ -1148,7 +1150,7 @@ msgstr "숫자 키패드 +"
 
 #: src/keycode.cpp
 msgid "Numpad -"
-msgstr "숫자 키패드-"
+msgstr "숫자 키패드 -"
 
 #: src/keycode.cpp
 msgid "Numpad /"
@@ -1203,76 +1205,81 @@ msgid "PA1"
 msgstr ""
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Pause"
-msgstr ""
+msgstr "일시 중지"
 
 #: src/keycode.cpp
 msgid "Period"
-msgstr ""
+msgstr "기간"
 
 #: src/keycode.cpp
 msgid "Plus"
-msgstr ""
+msgstr "플러스"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Print"
-msgstr ""
+msgstr "인쇄"
 
 #: src/keycode.cpp
 msgid "Prior"
-msgstr ""
+msgstr "이전"
 
 #: src/keycode.cpp
 msgid "Return"
-msgstr ""
+msgstr "되돌리기"
 
 #: src/keycode.cpp
 msgid "Right Button"
-msgstr ""
+msgstr "오른쪽 버튼"
 
 #: src/keycode.cpp
 msgid "Right Control"
-msgstr ""
+msgstr "오른쪽 컨트롤"
 
 #: src/keycode.cpp
 msgid "Right Menu"
-msgstr ""
+msgstr "오른쪽 메뉴"
 
 #: src/keycode.cpp
 msgid "Right Shift"
-msgstr ""
+msgstr "오른쪽 쉬프트"
 
 #: src/keycode.cpp
 msgid "Right Windows"
-msgstr ""
+msgstr "오른쪽 창"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Scroll Lock"
-msgstr ""
+msgstr "스크롤 락"
 
 #: src/keycode.cpp
 msgid "Select"
-msgstr ""
+msgstr "선택"
 
 #: src/keycode.cpp
 msgid "Shift"
-msgstr ""
+msgstr "쉬프트"
 
 #: src/keycode.cpp
 msgid "Sleep"
-msgstr ""
+msgstr "잠자기"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Snapshot"
-msgstr ""
+msgstr "스냅숏"
 
 #: src/keycode.cpp
+#, fuzzy
 msgid "Space"
-msgstr ""
+msgstr "스페이스"
 
 #: src/keycode.cpp
 msgid "Tab"
-msgstr ""
+msgstr "탭"
 
 #: src/keycode.cpp
 msgid "Up"
@@ -1310,6 +1317,7 @@ msgid "3D mode"
 msgstr "3D 모드"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid ""
 "3D support.\n"
 "Currently supported:\n"
@@ -1320,6 +1328,14 @@ msgid ""
 "-    sidebyside: split screen side by side.\n"
 "-    pageflip: quadbuffer based 3d."
 msgstr ""
+"3D 지원.\n"
+"현재 지원되는 것:\n"
+"- 없음: 3d 출력 없음.\n"
+"- 입체 사진: 청록색/자홍색 3d.\n"
+"- interlaced: odd/even line based polarisation screen support.↵\n"
+"- topbottom: split screen top/bottom.↵\n"
+"- sidebyside: split screen side by side.↵\n"
+"- pageflip: quadbuffer based 3d."
 
 #: src/settings_translation_file.cpp
 msgid ""
@@ -1401,23 +1417,28 @@ msgid "Ambient occlusion gamma"
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Amplifies the valleys"
-msgstr ""
+msgstr "계곡 증폭"
 
 #: src/settings_translation_file.cpp
 msgid "Anisotropic filtering"
-msgstr ""
+msgstr "이방성 필터링"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Announce server"
-msgstr ""
+msgstr "서버 발표"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid ""
 "Announce to this serverlist.\n"
 "If you want to announce your ipv6 address, use  serverlist_url = v6.servers."
 "minetest.net."
 msgstr ""
+"서버리스트에 발표합니다.\n"
+"만약 당신의 Ipv6 주소를 알리기 원한다면 serverlist_url = v6.servers.minetest.net 을 사용하세요."
 
 #: src/settings_translation_file.cpp
 msgid "Approximate (X,Y,Z) scale of fractal in nodes."
@@ -1425,7 +1446,7 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Ask to reconnect after crash"
-msgstr ""
+msgstr "충돌 후 재연결 요청"
 
 #: src/settings_translation_file.cpp
 msgid "Automaticaly report to the serverlist."
@@ -1437,23 +1458,23 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Backward key"
-msgstr ""
+msgstr "뒤로 이동하는 키"
 
 #: src/settings_translation_file.cpp
 msgid "Base terrain height"
-msgstr ""
+msgstr "기본 지형 높이"
 
 #: src/settings_translation_file.cpp
 msgid "Basic"
-msgstr ""
+msgstr "기본"
 
 #: src/settings_translation_file.cpp
 msgid "Basic Privileges"
-msgstr ""
+msgstr "기본 권한"
 
 #: src/settings_translation_file.cpp
 msgid "Bilinear filtering"
-msgstr ""
+msgstr "이중 선형 필터링"
 
 #: src/settings_translation_file.cpp
 msgid "Bind address"
@@ -1489,15 +1510,15 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Cave noise #1"
-msgstr ""
+msgstr "동굴 잡음 #1"
 
 #: src/settings_translation_file.cpp
 msgid "Cave noise #2"
-msgstr ""
+msgstr "동굴 잡음 #2"
 
 #: src/settings_translation_file.cpp
 msgid "Cave width"
-msgstr ""
+msgstr "동굴 너비"
 
 #: src/settings_translation_file.cpp
 msgid "Caves and tunnels form at the intersection of the two noises"
@@ -1539,8 +1560,9 @@ msgid ""
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Chunk size"
-msgstr ""
+msgstr "덩어리 크기"
 
 #: src/settings_translation_file.cpp
 msgid "Cinematic mode"
@@ -1551,8 +1573,9 @@ msgid "Cinematic mode key"
 msgstr "시네마틱 모드 스위치"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Clean transparent textures"
-msgstr ""
+msgstr "깨끗하고 투명한 텍스처"
 
 #: src/settings_translation_file.cpp
 msgid "Client and Server"
@@ -1560,7 +1583,7 @@ msgstr "클라이언트와 서버"
 
 #: src/settings_translation_file.cpp
 msgid "Climbing speed"
-msgstr ""
+msgstr "오르기 속도"
 
 #: src/settings_translation_file.cpp
 msgid "Cloud height"
@@ -1584,7 +1607,7 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Colored fog"
-msgstr ""
+msgstr "색깔있는 안개"
 
 #: src/settings_translation_file.cpp
 #, fuzzy
@@ -3536,16 +3559,18 @@ msgid "Overall bias of parallax occlusion effect, usually scale/2."
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Overall scale of parallax occlusion effect."
-msgstr ""
+msgstr "시차 교합 효과의 전체 규모"
 
 #: src/settings_translation_file.cpp
 msgid "Parallax occlusion"
-msgstr ""
+msgstr "시차 교합"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Parallax occlusion Scale"
-msgstr ""
+msgstr "시차 교합 규모"
 
 #: src/settings_translation_file.cpp
 msgid "Parallax occlusion bias"
@@ -3556,12 +3581,14 @@ msgid "Parallax occlusion iterations"
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Parallax occlusion mode"
-msgstr ""
+msgstr "시차 교합 모드"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Parallax occlusion strength"
-msgstr ""
+msgstr "시차 교합 강도"
 
 #: src/settings_translation_file.cpp
 msgid "Path to TrueTypeFont or bitmap."
@@ -3625,16 +3652,16 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Profiler"
-msgstr ""
+msgstr "프로파일러"
 
 #: src/settings_translation_file.cpp
 msgid "Profiler toggle key"
-msgstr ""
+msgstr "프로파일러 토글 키"
 
 #: src/settings_translation_file.cpp
 #, fuzzy
 msgid "Profiling"
-msgstr "자료 수집"
+msgstr "프로 파일링"
 
 #: src/settings_translation_file.cpp
 msgid ""
@@ -3644,8 +3671,9 @@ msgid ""
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Raises terrain to make valleys around the rivers"
-msgstr ""
+msgstr "강 주변에 계곡을 만들기 위해 지형을 올립니다."
 
 #: src/settings_translation_file.cpp
 #, fuzzy
@@ -3816,6 +3844,8 @@ msgid ""
 "Set the language. Leave empty to use the system language.\n"
 "A restart is required after changing this."
 msgstr ""
+"언어 설정. 시스템 언어를 사용하려면 비워두세요.\n"
+"설정 적용 후 재시작이 필요합니다."
 
 #: src/settings_translation_file.cpp
 msgid ""
@@ -3918,7 +3948,7 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "Static spawnpoint"
-msgstr ""
+msgstr "고정된 스폰포인트"
 
 #: src/settings_translation_file.cpp
 msgid "Strength of generated normalmaps."
@@ -4032,7 +4062,7 @@ msgstr ""
 
 #: src/settings_translation_file.cpp
 msgid "This font will be used for certain languages."
-msgstr ""
+msgstr "이 글꼴은 특정 언어에 사용 됩니다."
 
 #: src/settings_translation_file.cpp
 msgid "Time in between active block management cycles"
@@ -4045,8 +4075,9 @@ msgid ""
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid "Time send interval"
-msgstr ""
+msgstr "시간 전송 간격"
 
 #: src/settings_translation_file.cpp
 msgid "Time speed"
@@ -4058,12 +4089,15 @@ msgid "Timeout for client to remove unused map data from memory."
 msgstr "메모리에서 사용 하지 않는 맵 데이터를 제거하기 위해 클라이언트에 대한 시간 제한입니다."
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid ""
 "To reduce lag, block transfers are slowed down when a player is building "
 "something.\n"
 "This determines how long they are slowed down after placing or removing a "
 "node."
 msgstr ""
+"플레이어가 무엇을 건설할 때 딜레이를 줄이기 위해 블럭 전송이 느려집니다.\n"
+"이것은 node가 배치되거나 제거된 후 얼마나 오래 느려지는지를 결정합니다."
 
 #: src/settings_translation_file.cpp
 #, fuzzy
@@ -4203,7 +4237,7 @@ msgstr "보여지는 범위"
 
 #: src/settings_translation_file.cpp
 msgid "Volume"
-msgstr "소리 크기"
+msgstr "볼륨"
 
 #: src/settings_translation_file.cpp
 msgid ""
@@ -4223,7 +4257,7 @@ msgstr "물 특징"
 
 #: src/settings_translation_file.cpp
 msgid "Water level"
-msgstr "수위(물의 높이)"
+msgstr "물의 높이"
 
 #: src/settings_translation_file.cpp
 msgid "Water surface level of the world."
@@ -4236,11 +4270,11 @@ msgstr "움직이는 Node"
 
 #: src/settings_translation_file.cpp
 msgid "Waving leaves"
-msgstr "움직이는 나뭇잎 효과"
+msgstr "흔들리는 나뭇잎 효과"
 
 #: src/settings_translation_file.cpp
 msgid "Waving plants"
-msgstr "움직이는 식물 효과"
+msgstr "흔들리는 식물 효과"
 
 #: src/settings_translation_file.cpp
 msgid "Waving water"
@@ -4259,11 +4293,14 @@ msgid "Waving water speed"
 msgstr "물결 속도"
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid ""
 "When gui_scaling_filter is true, all GUI images need to be\n"
 "filtered in software, but some images are generated directly\n"
 "to hardware (e.g. render-to-texture for nodes in inventory)."
 msgstr ""
+"Gui_scaling_filter이 true 이면 모든 GUI 이미지 소프트웨어에서 필터링 될 필요가 있습니다. 하지만 일부 이미지는 "
+"바로 하드웨어에 생성됩니다. (e.g. render-to-texture for nodes in inventory)."
 
 #: src/settings_translation_file.cpp
 msgid ""
@@ -4274,6 +4311,7 @@ msgid ""
 msgstr ""
 
 #: src/settings_translation_file.cpp
+#, fuzzy
 msgid ""
 "When using bilinear/trilinear/anisotropic filters, low-resolution textures\n"
 "can be blurred, so automatically upscale them with nearest-neighbor\n"
@@ -4283,6 +4321,12 @@ msgid ""
 "have a visible effect unless bilinear/trilinear/anisotropic filtering is\n"
 "enabled."
 msgstr ""
+"이중선형/삼중선형/이방성 필터를 사용할 때 저해상도 택스쳐는 희미하게 보일 수 있습니다.so automatically upscale "
+"them with nearest-neighbor interpolation to preserve crisp pixels. This sets "
+"the minimum texture size for the upscaled textures; 값이 높을수록 선명하게 보입니다. 하지만 "
+"많은 메모리가 필요합니다. Powers of 2 are recommended. Setting this higher than 1 may "
+"not have a visible effect unless bilinear/trilinear/anisotropic filtering is "
+"enabled."
 
 #: src/settings_translation_file.cpp
 msgid ""
