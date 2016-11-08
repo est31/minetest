@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: minetest\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2016-08-30 06:18+0200\n"
-"PO-Revision-Date: 2016-09-25 20:41+0000\n"
-"Last-Translator: nedzadarek <nedzadarek@gmail.com>\n"
+"PO-Revision-Date: 2016-11-08 16:43+0000\n"
+"Last-Translator: Jakub Mendel <jimikuba@o2.pl>\n"
 "Language-Team: Polish "
 "<https://hosted.weblate.org/projects/minetest/minetest/pl/>\n"
 "Language: pl\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 2.9-dev\n"
+"X-Generator: Weblate 2.9\n"
 
 #: builtin/fstk/ui.lua
 msgid "An error occured in a Lua script, such as a mod:"
@@ -54,20 +54,21 @@ msgstr "Niezgodne wersje protokołów. "
 
 #: builtin/mainmenu/common.lua
 msgid "Server enforces protocol version $1. "
-msgstr "Serwer narzuca wersję protokołu $1. "
+msgstr "Serwer żąda użycia protokołu w wersji $1."
 
 #: builtin/mainmenu/common.lua
 msgid "Server supports protocol versions between $1 and $2. "
-msgstr "Serwer wspiera wersje protokołu od $1 do $2. "
+msgstr "Serwer wspiera protokoły w wersjach od $1 do $2."
 
 #: builtin/mainmenu/common.lua
 msgid "Try reenabling public serverlist and check your internet connection."
 msgstr ""
-"Spróbuj włączyć ponownie publiczną listę serwerów i sprawdź połączenie."
+"Spróbuj ponownie włączyć publiczną listę serwerów i sprawdź swoje połączenie "
+"internetowe."
 
 #: builtin/mainmenu/common.lua
 msgid "We only support protocol version $1."
-msgstr "Wspieramy tylko protokół w wersji $1."
+msgstr "Wspieramy wyłącznie protokół w wersji $1."
 
 #: builtin/mainmenu/common.lua
 msgid "We support protocol versions between version $1 and $2."
@@ -102,8 +103,8 @@ msgid ""
 "Failed to enable mod \"$1\" as it contains disallowed characters. Only "
 "chararacters [a-z0-9_] are allowed."
 msgstr ""
-"Nie można włączyć moda \"$1\" gdyż nazwa zawiera niedozwolone znaki. "
-"Dozwolone są wyłącznie znaki  [a-z0-9_]."
+"Nie udało się aktywować moda \"$1\", ponieważ zawiera niedozwolone znaki. "
+"Tylko znaki [a-z0-9_] są dozwolone."
 
 #: builtin/mainmenu/dlg_config_world.lua
 msgid "Hide Game"
@@ -144,7 +145,7 @@ msgstr "Pobierz tryb gry (np. minetest_game), z minetest.net"
 
 #: builtin/mainmenu/dlg_create_world.lua
 msgid "Download one from minetest.net"
-msgstr "Pobierz z minetest.net"
+msgstr "Ściągnij taką z minetest.net"
 
 #: builtin/mainmenu/dlg_create_world.lua src/settings_translation_file.cpp
 msgid "Game"
@@ -165,8 +166,7 @@ msgstr "Ziarno losowości"
 #: builtin/mainmenu/dlg_create_world.lua
 msgid "Warning: The minimal development test is meant for developers."
 msgstr ""
-"Uwaga: Tryb minimal development test jest stworzony wyłącznie dla "
-"developerów."
+"Uwaga: Minimal development test jest przeznaczony tylko dla developerów."
 
 #: builtin/mainmenu/dlg_create_world.lua
 msgid "World name"
@@ -212,7 +212,7 @@ msgstr "\"$1\" nie jest poprawną flagą."
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "(No description of setting given)"
-msgstr "(Nie podano opisu ustawienia)"
+msgstr "(brak opisu)"
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "< Back to Settings page"
@@ -264,15 +264,15 @@ msgstr "Wprowadź listę flag oddzielonych przecinkami."
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "Please enter a valid integer."
-msgstr "Wprowadź poprawną liczbę całkowitą."
+msgstr "Proszę wpisać prawidłową liczbę."
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "Please enter a valid number."
-msgstr "Wprowadź poprawną liczbę."
+msgstr "Proszę wpisać prawidłowy numer."
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "Possible values are: "
-msgstr "Możliwe wartości: "
+msgstr "Możliwe wartości to: "
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "Restore Default"
@@ -284,15 +284,15 @@ msgstr "Wybierz ścieżkę"
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "Show technical names"
-msgstr "Pokaż nazwy ustawień"
+msgstr "Pokaż nazwy techniczne"
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "The value must be greater than $1."
-msgstr "Wartość musi być większa od $1."
+msgstr "Wartość musi być większa niż $1."
 
 #: builtin/mainmenu/dlg_settings_advanced.lua
 msgid "The value must be lower than $1."
-msgstr "Wartość musi być mniejsza od $1."
+msgstr "Wartość musi być mniejsza niż $1."
 
 #: builtin/mainmenu/modmgr.lua
 msgid ""
@@ -321,7 +321,7 @@ msgstr ""
 
 #: builtin/mainmenu/store.lua
 msgid "Close store"
-msgstr "Zamknij sklep"
+msgstr "Zamknij"
 
 #: builtin/mainmenu/store.lua
 msgid "Downloading $1, please wait..."
@@ -345,11 +345,11 @@ msgstr "Szukaj"
 
 #: builtin/mainmenu/store.lua
 msgid "Shortname:"
-msgstr "Skrócona nazwa:"
+msgstr "Nazwa skrócona:"
 
 #: builtin/mainmenu/store.lua
 msgid "Successfully installed:"
-msgstr "Pomyślnie zainstalowano:"
+msgstr "Zainstalowano pomyślnie:"
 
 #: builtin/mainmenu/store.lua
 msgid "Unsorted"
@@ -377,7 +377,7 @@ msgstr "Byli współautorzy"
 
 #: builtin/mainmenu/tab_credits.lua
 msgid "Previous Core Developers"
-msgstr "Poprzedni Główni Twórcy"
+msgstr "Poprzedni Główni Deweloperzy"
 
 #: builtin/mainmenu/tab_mods.lua
 msgid "Installed Mods:"
@@ -445,7 +445,7 @@ msgstr "PvP włączone"
 
 #: builtin/mainmenu/tab_server.lua
 msgid "Bind Address"
-msgstr "Przypisz Adres"
+msgstr "Adres"
 
 #: builtin/mainmenu/tab_server.lua builtin/mainmenu/tab_singleplayer.lua
 msgid "Configure"
@@ -471,7 +471,7 @@ msgstr "Nowy"
 
 #: builtin/mainmenu/tab_server.lua builtin/mainmenu/tab_singleplayer.lua
 msgid "No world created or selected!"
-msgstr "Nie stworzono lub nie wybrano świata!"
+msgstr "Nie wybrano bądź nie utworzono świata!"
 
 #: builtin/mainmenu/tab_server.lua
 msgid "Port"
@@ -655,7 +655,7 @@ msgstr "Tak"
 
 #: builtin/mainmenu/tab_simple_main.lua
 msgid "Config mods"
-msgstr "Skonfiguruj mody"
+msgstr "Ustawienia modów"
 
 #: builtin/mainmenu/tab_simple_main.lua
 msgid "Main"
@@ -687,7 +687,7 @@ msgstr "Paczki tekstur"
 
 #: src/client.cpp
 msgid "Connection timed out."
-msgstr "Przekroczono limit czasu połączenia."
+msgstr "Upłynął czas połączenia."
 
 #: src/client.cpp
 msgid "Done!"
@@ -707,7 +707,7 @@ msgstr "Ładowanie tekstur..."
 
 #: src/client.cpp
 msgid "Rebuilding shaders..."
-msgstr "Kompilowanie shaderów..."
+msgstr "Przebudowywanie shaderów..."
 
 #: src/client/clientlauncher.cpp
 msgid "Connection error (timed out?)"
@@ -959,7 +959,7 @@ msgstr "Skradanie"
 
 #: src/guiKeyChangeMenu.cpp
 msgid "Toggle Cinematic"
-msgstr "Przełącz tryb Cinematic"
+msgstr "Przełącz na tryb Cinematic"
 
 #: src/guiKeyChangeMenu.cpp
 msgid "Toggle fast"
@@ -1541,7 +1541,7 @@ msgstr "Gra wieloosobowa"
 
 #: src/settings_translation_file.cpp
 msgid "Builtin"
-msgstr ""
+msgstr "Wbudowany"
 
 #: src/settings_translation_file.cpp
 msgid "Bumpmapping"
@@ -1842,7 +1842,7 @@ msgstr "Szybkość podczas kucania"
 
 #: src/settings_translation_file.cpp
 msgid "DPI"
-msgstr ""
+msgstr "DPI"
 
 #: src/settings_translation_file.cpp
 msgid "Damage"
@@ -1891,7 +1891,7 @@ msgstr "Domyślne uprawnienia"
 
 #: src/settings_translation_file.cpp
 msgid "Default report format"
-msgstr ""
+msgstr "Domyślny format raportu"
 
 #: src/settings_translation_file.cpp
 #, fuzzy
